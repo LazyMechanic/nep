@@ -1,0 +1,16 @@
+[package]
+name = "nep"
+version = "0.1.0"
+authors = ["Artem Pyatnitskiy <asharnrus@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "nep"
+path = "src/lib.rs"
+
+[[bin]]
+name = "nep_bin"
+path = "src/main.rs"
+
+[dependencies]
+sdl2 = "0.33"
