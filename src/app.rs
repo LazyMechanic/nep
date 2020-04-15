@@ -18,12 +18,12 @@ const PAD_R: u8 = 0x80;
 
 pub struct App {
     sdl_context: Sdl,
-    canvas: WindowCanvas,
-    ctx: Option<Context>,
+    canvas:      WindowCanvas,
+    ctx:         Option<Context>,
 }
 
 impl App {
-    pub fn new() -> App {
+    pub fn new() -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
         let window = video_subsystem
