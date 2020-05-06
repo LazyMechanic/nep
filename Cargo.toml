@@ -14,3 +14,8 @@ path = "src/main.rs"
 
 [dependencies]
 sdl2 = "0.33"
+derive_more = "0.99.5"
+
+[dependencies.snafu]
+version = "0.6.6"
+features = ["backtraces-impl-backtrace-crate"]

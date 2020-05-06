@@ -1,12 +1,12 @@
 use super::status_register::StatusRegister;
+use crate::types::*;
 
 pub trait CpuRegisters {
-    fn get_a(&self) -> u8;
-    fn get_x(&self) -> u8;
-    fn get_y(&self) -> u8;
-    fn get_sp(&self) -> u8;
-    fn get_pc(&self) -> u16;
-    fn get_status(&self) -> u8;
+    fn get_a(&self) -> Data;
+    fn get_x(&self) -> Data;
+    fn get_y(&self) -> Data;
+    fn get_sp(&self) -> Data;
+    fn get_pc(&self) -> Addr;
     fn get_carry(&self) -> bool;
     fn get_zero(&self) -> bool;
     fn get_disable_interrupt(&self) -> bool;
@@ -15,13 +15,13 @@ pub trait CpuRegisters {
     fn get_reserved(&self) -> bool;
     fn get_overflow(&self) -> bool;
     fn get_negative(&self) -> bool;
+    fn get_status(&self) -> Data;
 
-    fn set_a(&mut self, v: u8) -> &mut Self;
-    fn set_x(&mut self, v: u8) -> &mut Self;
-    fn set_y(&mut self, v: u8) -> &mut Self;
-    fn set_sp(&mut self, v: u8) -> &mut Self;
-    fn set_pc(&mut self, v: u16) -> &mut Self;
-    fn set_status(&mut self, v: u8) -> &mut Self;
+    fn set_a(&mut self, v: Data) -> &mut Self;
+    fn set_x(&mut self, v: Data) -> &mut Self;
+    fn set_y(&mut self, v: Data) -> &mut Self;
+    fn set_sp(&mut self, v: Data) -> &mut Self;
+    fn set_pc(&mut self, v: Addr) -> &mut Self;
     fn set_carry(&mut self, v: bool) -> &mut Self;
     fn set_zero(&mut self, v: bool) -> &mut Self;
     fn set_disable_interrupt(&mut self, v: bool) -> &mut Self;
@@ -30,123 +30,82 @@ pub trait CpuRegisters {
     fn set_reserved(&mut self, v: bool) -> &mut Self;
     fn set_overflow(&mut self, v: bool) -> &mut Self;
     fn set_negative(&mut self, v: bool) -> &mut Self;
+    fn set_status(&mut self, v: Data) -> &mut Self;
 
     fn inc_sp(&mut self) -> &mut Self;
     fn inc_pc(&mut self) -> &mut Self;
-
     fn dec_sp(&mut self) -> &mut Self;
     fn dec_pc(&mut self) -> &mut Self;
-
-    fn update_negative_by(&mut self, v: u8) -> &mut Self;
-    fn update_zero_by(&mut self, v: u8) -> &mut Self;
+    fn update_negative_by(&mut self, v: Data) -> &mut Self;
+    fn update_zero_by(&mut self, v: Data) -> &mut Self;
 }
 
+#[derive(Default, Clone, Copy, Debug)]
 pub struct Registers {
-    pub a:      u8,             // Accumulator register
-    pub x:      u8,             // X register
-    pub y:      u8,             // Y register
-    pub sp:     u8,             // Stack pointer
-    pub pc:     u16,            // Program counter
+    pub a:      Data,
+    // Accumulator register
+    pub x:      Data,
+    // X register
+    pub y:      Data,
+    // Y register
+    pub sp:     Data,
+    // Stack pointer
+    pub pc:     Addr,
+    // Program counter
     pub status: StatusRegister, // Status register
 }
 
-impl Registers {
-    pub fn new() -> Self {
-        Registers {
-            a:      0,
-            x:      0,
-            y:      0,
-            sp:     0x8000,
-            pc:     0xfd,
-            status: StatusRegister::new(),
-        }
-    }
-}
-
 impl CpuRegisters for Registers {
-    fn get_a(&self) -> u8 {
-        self.a
-    }
+    fn get_a(&self) -> Data { self.a }
 
-    fn get_x(&self) -> u8 {
-        self.x
-    }
+    fn get_x(&self) -> Data { self.x }
 
-    fn get_y(&self) -> u8 {
-        self.y
-    }
+    fn get_y(&self) -> Data { self.y }
 
-    fn get_sp(&self) -> u8 {
-        self.sp
-    }
+    fn get_sp(&self) -> Data { self.sp }
 
-    fn get_pc(&self) -> u16 {
-        self.pc
-    }
+    fn get_pc(&self) -> Addr { self.pc }
 
-    fn get_status(&self) -> u8 {
-        self.status.into()
-    }
+    fn get_carry(&self) -> bool { self.status.carry }
 
-    fn get_carry(&self) -> bool {
-        self.status.carry
-    }
+    fn get_zero(&self) -> bool { self.status.zero }
 
-    fn get_zero(&self) -> bool {
-        self.status.zero
-    }
+    fn get_disable_interrupt(&self) -> bool { self.status.disable_interrupt }
 
-    fn get_disable_interrupt(&self) -> bool {
-        self.status.disable_interrupt
-    }
+    fn get_decimal_mode(&self) -> bool { self.status.decimal_mode }
 
-    fn get_decimal_mode(&self) -> bool {
-        self.status.decimal_mode
-    }
+    fn get_break_mode(&self) -> bool { self.status.break_mode }
 
-    fn get_break_mode(&self) -> bool {
-        self.status.break_mode
-    }
+    fn get_reserved(&self) -> bool { self.status.reserved }
 
-    fn get_reserved(&self) -> bool {
-        self.status.reserved
-    }
+    fn get_overflow(&self) -> bool { self.status.overflow }
 
-    fn get_overflow(&self) -> bool {
-        self.status.overflow
-    }
+    fn get_negative(&self) -> bool { self.status.negative }
 
-    fn get_negative(&self) -> bool {
-        self.status.negative
-    }
+    fn get_status(&self) -> Data { Data(self.status.clone().into()) }
 
-    fn set_a(&mut self, v: u8) -> &mut Self {
+    fn set_a(&mut self, v: Data) -> &mut Self {
         self.a = v;
         self
     }
 
-    fn set_x(&mut self, v: u8) -> &mut Self {
+    fn set_x(&mut self, v: Data) -> &mut Self {
         self.x = v;
         self
     }
 
-    fn set_y(&mut self, v: u8) -> &mut Self {
+    fn set_y(&mut self, v: Data) -> &mut Self {
         self.y = v;
         self
     }
 
-    fn set_sp(&mut self, v: u8) -> &mut Self {
+    fn set_sp(&mut self, v: Data) -> &mut Self {
         self.sp = v;
         self
     }
 
-    fn set_pc(&mut self, v: u16) -> &mut Self {
+    fn set_pc(&mut self, v: Addr) -> &mut Self {
         self.pc = v;
-        self
-    }
-
-    fn set_status(&mut self, v: u8) -> &mut Self {
-        self.status = StatusRegister::from(v);
         self
     }
 
@@ -190,33 +149,38 @@ impl CpuRegisters for Registers {
         self
     }
 
+    fn set_status(&mut self, v: Data) -> &mut Self {
+        self.status = v.into();
+        self
+    }
+
     fn inc_sp(&mut self) -> &mut Self {
-        self.sp += 1;
+        self.sp.inc();
         self
     }
 
     fn inc_pc(&mut self) -> &mut Self {
-        self.pc += 1;
+        self.pc.inc();
         self
     }
 
     fn dec_sp(&mut self) -> &mut Self {
-        self.sp -= 1;
+        self.sp.dec();
         self
     }
 
     fn dec_pc(&mut self) -> &mut Self {
-        self.pc -= 1;
+        self.pc.dec();
         self
     }
 
-    fn update_negative_by(&mut self, v: u8) -> &mut Self {
-        self.status.negative = v & 0x80 == 0x80;
+    fn update_negative_by(&mut self, v: Data) -> &mut Self {
+        self.status.negative = v & 0x80.into() == 0x80.into();
         self
     }
 
-    fn update_zero_by(&mut self, v: u8) -> &mut Self {
-        self.status.zero = v == 0;
+    fn update_zero_by(&mut self, v: Data) -> &mut Self {
+        self.status.zero = v == 0.into();
         self
     }
 }

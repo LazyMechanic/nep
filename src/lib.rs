@@ -1,1 +1,2 @@
-pub mod nes;
+mod nes;
+pub use nes::*;
