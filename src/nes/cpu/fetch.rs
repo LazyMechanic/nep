@@ -12,29 +12,36 @@ where
     fetch_byte(cpu_registers, cpu_bus)
 }
 
-pub fn fetch_operand<T, U>(cpu_registers: &mut T, cpu_bus: &mut U, mode: &AddressingMode) -> Operand
+pub fn fetch_operand<T, U>(
+    cpu_registers: &mut T,
+    cpu_bus: &mut U,
+    mode: &AddressingMode,
+) -> (
+    /*       operand*/ Operand,
+    /*need add cycle*/ bool,
+)
 where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let operand: Operand = match mode {
+    let result = match mode {
         AddressingMode::XXX => unimplemented!(),
-        AddressingMode::ACC => unimplemented!(),
+        AddressingMode::ACC => (Operand::None, false),
         AddressingMode::ABS => unimplemented!(),
         AddressingMode::ABX => unimplemented!(),
         AddressingMode::ABY => unimplemented!(),
-        AddressingMode::IMP => unimplemented!(),
+        AddressingMode::IMP => (Operand::None, false),
         AddressingMode::IMM => unimplemented!(),
         AddressingMode::IND => unimplemented!(),
         AddressingMode::IZX => unimplemented!(),
         AddressingMode::IZY => unimplemented!(),
-        AddressingMode::REL => unimplemented!(),
+        AddressingMode::REL => fetch_relative(cpu_registers, cpu_bus),
         AddressingMode::ZP0 => unimplemented!(),
         AddressingMode::ZPX => unimplemented!(),
         AddressingMode::ZPY => unimplemented!(),
     };
 
-    operand
+    result
 }
 
 fn fetch_byte<T, U>(cpu_registers: &mut T, cpu_bus: &mut U) -> Byte
@@ -55,5 +62,18 @@ where
     let lo = fetch_byte(cpu_registers, cpu_bus);
     let hi = fetch_byte(cpu_registers, cpu_bus);
 
-    Word::from_bytes(hi, lo)
+    Word::from_bytes(lo, hi)
+}
+
+fn fetch_relative<T, U>(cpu_registers: &mut T, cpu_bus: &mut U) -> (Operand, bool)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let base = fetch_byte(cpu_registers, cpu_bus);
+    if base.is_neg() {
+        (Operand::Addr(base.into_lo_addr() | 0xFF00.into()), false)
+    } else {
+        (Operand::Addr(base.into_lo_addr()), false)
+    }
 }

@@ -44,6 +44,14 @@ impl Byte {
         let addr: Addr = ((self.0 as u16) & 0x00FF).into();
         addr
     }
+
+    pub fn is_pos(&self) -> bool {
+        self.0 & 0x80 == 0x00
+    }
+
+    pub fn is_neg(&self) -> bool {
+        !self.is_pos()
+    }
 }
 
 impl Word {
@@ -67,8 +75,8 @@ impl Word {
         byte
     }
 
-    pub fn from_bytes(hi: Byte, lo: Byte) -> Word {
-        let word: Word = hi.into_hi_word() | lo.into_lo_word();
+    pub fn from_bytes(lo: Byte, hi: Byte) -> Word {
+        let word: Word = lo.into_lo_word() | hi.into_hi_word();
         word
     }
 }

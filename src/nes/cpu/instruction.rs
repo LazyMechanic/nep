@@ -73,7 +73,7 @@ pub fn adc<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -89,7 +89,7 @@ pub fn and<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -105,7 +105,7 @@ pub fn asl<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -121,7 +121,7 @@ pub fn bcc<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -137,7 +137,7 @@ pub fn bcs<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -153,7 +153,7 @@ pub fn beq<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -169,7 +169,7 @@ pub fn bit<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -185,7 +185,7 @@ pub fn bmi<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -201,7 +201,7 @@ pub fn bne<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -217,7 +217,7 @@ pub fn bpl<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -233,7 +233,7 @@ pub fn brk<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -249,7 +249,7 @@ pub fn bvc<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -265,7 +265,7 @@ pub fn bvs<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -281,7 +281,7 @@ pub fn clc<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -297,7 +297,7 @@ pub fn cld<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -313,7 +313,7 @@ pub fn cli<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -329,7 +329,7 @@ pub fn clv<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -345,7 +345,7 @@ pub fn cmp<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -361,7 +361,7 @@ pub fn cpx<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -377,7 +377,7 @@ pub fn cpy<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -393,7 +393,7 @@ pub fn dec<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -409,7 +409,7 @@ pub fn dex<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -425,7 +425,7 @@ pub fn dey<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -441,7 +441,7 @@ pub fn eor<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -457,7 +457,7 @@ pub fn inc<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -473,7 +473,7 @@ pub fn inx<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -489,7 +489,7 @@ pub fn iny<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -505,7 +505,7 @@ pub fn jmp<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -521,7 +521,7 @@ pub fn jsr<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -537,7 +537,7 @@ pub fn lda<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -553,7 +553,7 @@ pub fn ldx<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -569,7 +569,7 @@ pub fn ldy<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -585,7 +585,7 @@ pub fn lsr<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -601,7 +601,7 @@ pub fn nop<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -617,7 +617,7 @@ pub fn ora<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -633,7 +633,7 @@ pub fn pha<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -649,7 +649,7 @@ pub fn php<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -665,7 +665,7 @@ pub fn pla<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -681,7 +681,7 @@ pub fn plp<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -697,7 +697,7 @@ pub fn rol<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -713,7 +713,7 @@ pub fn ror<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -729,7 +729,7 @@ pub fn rti<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -745,7 +745,7 @@ pub fn rts<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -761,7 +761,7 @@ pub fn sbc<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -777,7 +777,7 @@ pub fn sec<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -793,7 +793,7 @@ pub fn sed<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -809,7 +809,7 @@ pub fn sei<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -825,7 +825,7 @@ pub fn sta<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -841,7 +841,7 @@ pub fn stx<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -857,7 +857,7 @@ pub fn sty<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -873,7 +873,7 @@ pub fn tax<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -889,7 +889,7 @@ pub fn tay<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -905,7 +905,7 @@ pub fn tsx<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -921,7 +921,7 @@ pub fn txa<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -937,7 +937,7 @@ pub fn txs<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -953,7 +953,7 @@ pub fn tya<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
@@ -969,7 +969,7 @@ pub fn xxx<T, U>(
     cpu_bus: &mut U,
     operand: Operand,
 ) -> (
-    /*additional cycles          */ NumOfCycles,
+    /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 )
 where
