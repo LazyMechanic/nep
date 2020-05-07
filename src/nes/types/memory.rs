@@ -66,6 +66,11 @@ impl Word {
         let byte: Byte = (((self.0 & 0xFF00) >> 8) as u8).into();
         byte
     }
+
+    pub fn from_bytes(hi: Byte, lo: Byte) -> Word {
+        let word: Word = hi.into_hi_word() | lo.into_lo_word();
+        word
+    }
 }
 
 impl From<Word> for Addr {
