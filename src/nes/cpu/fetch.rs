@@ -27,7 +27,7 @@ where
     let result = match mode {
         AddressingMode::XXX => unimplemented!(),
         AddressingMode::ACC => (Operand::None, false),
-        AddressingMode::ABS => unimplemented!(),
+        AddressingMode::ABS => fetch_absolute(cpu_registers, cpu_bus),
         AddressingMode::ABX => unimplemented!(),
         AddressingMode::ABY => unimplemented!(),
         AddressingMode::IMP => (Operand::None, false),
@@ -70,8 +70,23 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let base = fetch_word(cpu_registers, cpu_bus);
-    (Operand::Addr(base.into()), false)
+    let word = fetch_word(cpu_registers, cpu_bus);
+    (Operand::Addr(word.into()), false)
+}
+
+fn fetch_absolute_x<T, U>(cpu_registers: &mut T, cpu_bus: &mut U) -> (Operand, bool)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let word = fetch_word(cpu_registers, cpu_bus);
+    let addr: Addr = word.clone().into() + cpu_registers.get_x().into_lo_addr();
+
+    if word.hi() != addr.hi() {
+        (Operand::Addr(addr), true)
+    } else {
+        (Operand::Addr(addr), false)
+    }
 }
 
 fn fetch_relative<T, U>(cpu_registers: &mut T, cpu_bus: &mut U) -> (Operand, bool)
