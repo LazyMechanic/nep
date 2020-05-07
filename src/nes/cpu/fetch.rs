@@ -65,6 +65,15 @@ where
     Word::from_bytes(lo, hi)
 }
 
+fn fetch_absolute<T, U>(cpu_registers: &mut T, cpu_bus: &mut U) -> (Operand, bool)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let base = fetch_word(cpu_registers, cpu_bus);
+    (Operand::Addr(base.into()), false)
+}
+
 fn fetch_relative<T, U>(cpu_registers: &mut T, cpu_bus: &mut U) -> (Operand, bool)
 where
     T: CpuRegisters,
