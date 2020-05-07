@@ -1,5 +1,6 @@
 use super::addressing::AddressingMode;
 use super::instruction::Instruction;
+use super::instruction::NumOfCycles;
 use crate::types::*;
 
 #[derive(Debug, Clone)]

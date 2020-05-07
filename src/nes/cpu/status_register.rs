@@ -55,8 +55,8 @@ impl From<StatusRegister> for u8 {
     }
 }
 
-impl From<Data> for StatusRegister {
-    fn from(v: Data) -> Self {
+impl From<Byte> for StatusRegister {
+    fn from(v: Byte) -> Self {
         StatusRegister {
             carry:             v & 0b00000001.into() == 0b00000001.into(),
             zero:              v & 0b00000010.into() == 0b00000010.into(),
@@ -70,9 +70,9 @@ impl From<Data> for StatusRegister {
     }
 }
 
-impl From<StatusRegister> for Data {
+impl From<StatusRegister> for Byte {
     fn from(v: StatusRegister) -> Self {
-        Data(
+        Byte(
             (v.carry as u8) << 0
                 | (v.zero as u8) << 1
                 | (v.disable_interrupt as u8) << 2

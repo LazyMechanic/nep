@@ -1,6 +1,7 @@
 #[derive(Debug, Clone)]
 pub enum AddressingMode {
-    NONE,
+    XXX, // Unknown mode
+    ACC, // Accumulator
     ABS, // Absolute
     ABX, // Absolute with X offset
     ABY, // Absolute with Y offset
