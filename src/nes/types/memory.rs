@@ -56,6 +56,14 @@ impl Byte {
     pub fn with_set() -> Byte {
         0xFF.into()
     }
+
+    pub fn is_set(&self) -> bool {
+        self.0 == 0xFF
+    }
+
+    pub fn is_clear(&self) -> bool {
+        self.0 == 0x00
+    }
 }
 
 impl Word {
@@ -77,6 +85,26 @@ impl Word {
     pub fn into_hi(self) -> Byte {
         let byte: Byte = (((self.0 & 0xFF00) >> 8) as u8).into();
         byte
+    }
+
+    pub fn lo_word(&self) -> Word {
+        let v: Word = *self & 0x00FF.into();
+        v
+    }
+
+    pub fn hi_word(&self) -> Word {
+        let v: Word = *self & 0xFF00.into();
+        v
+    }
+
+    pub fn into_lo_word(self) -> Word {
+        let v: Word = self & 0x00FF.into();
+        v
+    }
+
+    pub fn into_hi_word(self) -> Word {
+        let v: Word = self & 0xFF00.into();
+        v
     }
 
     pub fn from_bytes(lo: Byte, hi: Byte) -> Word {
@@ -114,6 +142,26 @@ impl Addr {
         byte
     }
 
+    pub fn lo_addr(&self) -> Addr {
+        let v: Addr = *self & 0x00FF.into();
+        v
+    }
+
+    pub fn hi_addr(&self) -> Addr {
+        let v: Addr = *self & 0xFF00.into();
+        v
+    }
+
+    pub fn into_lo_addr(self) -> Addr {
+        let v: Addr = self & 0x00FF.into();
+        v
+    }
+
+    pub fn into_hi_addr(self) -> Addr {
+        let v: Addr = self & 0xFF00.into();
+        v
+    }
+
     pub fn from_bytes(lo: Byte, hi: Byte) -> Addr {
         let addr: Addr = lo.into_lo_addr() | hi.into_hi_addr();
         addr
@@ -134,8 +182,32 @@ impl From<Word> for Addr {
     }
 }
 
+impl From<&Word> for Addr {
+    fn from(v: &Word) -> Self {
+        Self(v.0)
+    }
+}
+
+impl From<&mut Word> for Addr {
+    fn from(v: &mut Word) -> Self {
+        Self(v.0)
+    }
+}
+
 impl From<Addr> for Word {
     fn from(v: Addr) -> Self {
+        Self(v.0)
+    }
+}
+
+impl From<&Addr> for Word {
+    fn from(v: &Addr) -> Self {
+        Self(v.0)
+    }
+}
+
+impl From<&mut Addr> for Word {
+    fn from(v: &mut Addr) -> Self {
         Self(v.0)
     }
 }
