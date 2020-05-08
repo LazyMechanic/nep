@@ -3,6 +3,8 @@ use std::env;
 use sdl2::render::WindowCanvas;
 use sdl2::Sdl;
 
+use nep::prelude::*;
+
 use super::consts;
 
 pub struct App {
@@ -27,7 +29,11 @@ impl App {
         }
     }
 
-    pub fn load_rom(&mut self, rom: Vec<u8>) -> nep::Result<()> { Ok(()) }
+    pub fn load_rom(&mut self, rom: Vec<u8>) -> Result<()> {
+        Ok(())
+    }
 
-    pub fn run(&mut self) { loop {} }
+    pub fn run(&mut self) {
+        loop {}
+    }
 }

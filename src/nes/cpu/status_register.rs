@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::prelude::*;
 
 #[derive(Debug, Default, Clone, Copy)]
 pub struct StatusRegister {

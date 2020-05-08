@@ -1,4 +1,4 @@
-use crate::types::*;
+use crate::prelude::*;
 
 pub trait CpuBus {
     fn read(&mut self, addr: Addr) -> Byte;
@@ -9,9 +9,15 @@ pub trait CpuBus {
 pub struct Bus {}
 
 impl CpuBus for Bus {
-    fn read(&mut self, addr: Addr) -> Byte { unimplemented!() }
+    fn read(&mut self, addr: Addr) -> Byte {
+        unimplemented!()
+    }
 
-    fn read_word(&mut self, addr: Addr) -> Word { unimplemented!() }
+    fn read_word(&mut self, addr: Addr) -> Word {
+        unimplemented!()
+    }
 
-    fn write(&mut self, addr: Addr, v: Byte) { unimplemented!() }
+    fn write(&mut self, addr: Addr, v: Byte) {
+        unimplemented!()
+    }
 }

@@ -1,5 +1,5 @@
 use super::status_register::StatusRegister;
-use crate::types::*;
+use crate::prelude::*;
 
 pub trait CpuRegisters {
     fn get_a(&self) -> Byte;

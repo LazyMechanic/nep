@@ -1,7 +1,7 @@
 use super::bus::CpuBus;
 use super::operand::Operand;
 use super::registers::CpuRegisters;
-use crate::types::*;
+use crate::prelude::*;
 
 #[derive(Debug, Clone)]
 pub enum AddressingMode {
@@ -105,12 +105,12 @@ where
     U: CpuBus,
 {
     let word = fetch_word(cpu_registers, cpu_bus);
-    let result = word + cpu_registers.get_x().into_lo_word();
+    let addr = Addr::from(word.clone()) + cpu_registers.get_x().into_lo_addr();
 
-    if word.hi() != result.hi() {
-        (Operand::Addr(result.into()), true)
+    if word.hi() != addr.hi() {
+        (Operand::Addr(addr), true)
     } else {
-        (Operand::Addr(result.into()), false)
+        (Operand::Addr(addr), false)
     }
 }
 
@@ -191,7 +191,7 @@ where
     let lo = cpu_bus.read(base);
     let hi = cpu_bus.read(*base.inc());
 
-    let addr = Addr::from_bytes(lo, hi) + cpu_registers.get_x().into_lo_addr();
+    let addr = Addr::from_bytes(lo, hi) + cpu_registers.get_y().into_lo_addr();
 
     if addr.hi() != hi {
         (Operand::Addr(addr), true)
