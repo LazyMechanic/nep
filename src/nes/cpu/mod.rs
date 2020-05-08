@@ -1,7 +1,6 @@
 pub mod addressing;
 pub mod bus;
 mod cpu;
-pub mod fetch;
 pub mod instruction;
 pub mod opcode;
 pub mod operand;
