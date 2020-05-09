@@ -1153,6 +1153,9 @@ where
     (0, false)
 }
 
+// Instruction: Pop Accumulator off Stack
+// Function:    A <- stack
+// Flags Out:   N, Z
 fn pla<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1163,7 +1166,14 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = pop(registers, bus);
+
+    registers
+        .set_a(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
 fn plp<T, U>(
