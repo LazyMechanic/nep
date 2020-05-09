@@ -105,7 +105,7 @@ where
     U: CpuBus,
 {
     let word = fetch_word(cpu_registers, cpu_bus);
-    let addr = Addr::from(word.clone()) + cpu_registers.get_x().into_lo_addr();
+    let addr = Addr::from(word.clone()) + cpu_registers.get_x().as_lo_addr();
 
     if word.hi() != addr.hi() {
         (Operand::Addr(addr), true)
@@ -120,7 +120,7 @@ where
     U: CpuBus,
 {
     let word = fetch_word(cpu_registers, cpu_bus);
-    let addr = Addr::from(word.clone()) + cpu_registers.get_y().into_lo_addr();
+    let addr = Addr::from(word.clone()) + cpu_registers.get_y().as_lo_addr();
 
     if word.hi() != addr.hi() {
         (Operand::Addr(addr), true)
@@ -154,13 +154,13 @@ where
     let mut word = fetch_word(cpu_registers, cpu_bus);
     if word.lo().is_set() {
         // Simulate page boundary hardware bug
-        let addr = cpu_bus.read(word.hi_word().into()).into_hi_addr()
-            | cpu_bus.read(word.into()).into_lo_addr();
+        let addr = cpu_bus.read(word.hi_word().into()).as_hi_addr()
+            | cpu_bus.read(word.into()).as_lo_addr();
         (Operand::Addr(addr), false)
     } else {
         // Behave normally
-        let addr = cpu_bus.read(word.inc().into()).into_hi_addr()
-            | cpu_bus.read(word.into()).into_lo_addr();
+        let addr =
+            cpu_bus.read(word.inc().into()).as_hi_addr() | cpu_bus.read(word.into()).as_lo_addr();
         (Operand::Addr(addr), false)
     }
 }
@@ -171,7 +171,7 @@ where
     U: CpuBus,
 {
     let mut base =
-        fetch_byte(cpu_registers, cpu_bus).into_lo_addr() + cpu_registers.get_x().into_lo_addr();
+        fetch_byte(cpu_registers, cpu_bus).as_lo_addr() + cpu_registers.get_x().as_lo_addr();
 
     let lo = cpu_bus.read(base);
     let hi = cpu_bus.read(*base.inc());
@@ -186,12 +186,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let mut base = fetch_byte(cpu_registers, cpu_bus).into_lo_addr();
+    let mut base = fetch_byte(cpu_registers, cpu_bus).as_lo_addr();
 
     let lo = cpu_bus.read(base);
     let hi = cpu_bus.read(*base.inc());
 
-    let addr = Addr::from_bytes(lo, hi) + cpu_registers.get_y().into_lo_addr();
+    let addr = Addr::from_bytes(lo, hi) + cpu_registers.get_y().as_lo_addr();
 
     if addr.hi() != hi {
         (Operand::Addr(addr), true)
@@ -207,9 +207,9 @@ where
 {
     let base = fetch_byte(cpu_registers, cpu_bus);
     if base.is_neg() {
-        (Operand::Addr(base.into_lo_addr() | 0xFF00.into()), false)
+        (Operand::Addr(base.as_lo_addr() | 0xFF00.into()), false)
     } else {
-        (Operand::Addr(base.into_lo_addr()), false)
+        (Operand::Addr(base.as_lo_addr()), false)
     }
 }
 
@@ -218,7 +218,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr = fetch_byte(cpu_registers, cpu_bus).into_lo_addr();
+    let addr = fetch_byte(cpu_registers, cpu_bus).as_lo_addr();
     (Operand::Addr(addr), false)
 }
 
@@ -227,8 +227,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr =
-        fetch_byte(cpu_registers, cpu_bus).into_lo_addr() + cpu_registers.get_x().into_lo_addr();
+    let addr = fetch_byte(cpu_registers, cpu_bus).as_lo_addr() + cpu_registers.get_x().as_lo_addr();
     (Operand::Addr(addr), false)
 }
 
@@ -237,7 +236,6 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr =
-        fetch_byte(cpu_registers, cpu_bus).into_lo_addr() + cpu_registers.get_y().into_lo_addr();
+    let addr = fetch_byte(cpu_registers, cpu_bus).as_lo_addr() + cpu_registers.get_y().as_lo_addr();
     (Operand::Addr(addr), false)
 }

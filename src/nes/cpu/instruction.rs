@@ -182,7 +182,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr = registers.get_sp().into_lo_addr() | 0x0100.into();
+    let addr = registers.get_sp().as_lo_addr() | 0x0100.into();
     bus.write(addr, v);
     registers.dec_sp();
 }
@@ -193,7 +193,7 @@ where
     U: CpuBus,
 {
     registers.inc_sp();
-    let addr = registers.get_sp().into_lo_addr() | 0x0100.into();
+    let addr = registers.get_sp().as_lo_addr() | 0x0100.into();
     bus.read(addr)
 }
 
@@ -332,7 +332,7 @@ where
     U: CpuBus,
 {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
-    let res = fetched.into_lo_word() << 1;
+    let res = fetched.as_lo_word() << 1;
 
     registers
         .set_carry(res.hi() > 0x00.into())
@@ -562,7 +562,7 @@ where
     push(registers, bus, registers.get_status());
     registers.set_break_mode(false);
 
-    let pc = bus.read(0xFFFE.into()).into_lo_addr() | bus.read(0xFFFF.into()).into_hi_addr();
+    let pc = bus.read(0xFFFE.into()).as_lo_addr() | bus.read(0xFFFF.into()).as_hi_addr();
     registers.set_pc(pc);
 
     (0, false)
@@ -688,6 +688,9 @@ where
     (0, false)
 }
 
+// Instruction: Compare Accumulator
+// Function:    C <- A >= M      Z <- (A - M) == 0
+// Flags Out:   N, C, Z
 fn cmp<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -698,7 +701,16 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let acc = registers.get_a();
+    let res = acc.as_lo_word() - fetched.as_lo_word();
+
+    registers
+        .set_carry(acc >= fetched)
+        .set_zero(res.lo().is_clear())
+        .set_negative(res.lo().is_neg());
+
+    (0, true)
 }
 
 fn cpx<T, U>(

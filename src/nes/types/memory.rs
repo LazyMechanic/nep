@@ -25,26 +25,6 @@ impl Byte {
         addr
     }
 
-    pub fn into_hi_word(self) -> Word {
-        let word: Word = (((self.0 as u16) << 8) & 0xFF00).into();
-        word
-    }
-
-    pub fn into_lo_word(self) -> Word {
-        let word: Word = ((self.0 as u16) & 0x00FF).into();
-        word
-    }
-
-    pub fn into_hi_addr(self) -> Addr {
-        let addr: Addr = (((self.0 as u16) << 8) & 0xFF00).into();
-        addr
-    }
-
-    pub fn into_lo_addr(self) -> Addr {
-        let addr: Addr = ((self.0 as u16) & 0x00FF).into();
-        addr
-    }
-
     pub fn is_pos(&self) -> bool {
         self.0 & 0x80 == 0x00
     }
@@ -84,16 +64,6 @@ impl Word {
         byte
     }
 
-    pub fn into_lo(self) -> Byte {
-        let byte: Byte = ((self.0 & 0x00FF) as u8).into();
-        byte
-    }
-
-    pub fn into_hi(self) -> Byte {
-        let byte: Byte = (((self.0 & 0xFF00) >> 8) as u8).into();
-        byte
-    }
-
     pub fn lo_word(&self) -> Word {
         let v: Word = *self & 0x00FF.into();
         v
@@ -101,16 +71,6 @@ impl Word {
 
     pub fn hi_word(&self) -> Word {
         let v: Word = *self & 0xFF00.into();
-        v
-    }
-
-    pub fn into_lo_word(self) -> Word {
-        let v: Word = self & 0x00FF.into();
-        v
-    }
-
-    pub fn into_hi_word(self) -> Word {
-        let v: Word = self & 0xFF00.into();
         v
     }
 
@@ -122,7 +82,7 @@ impl Word {
     }
 
     pub fn from_bytes(lo: Byte, hi: Byte) -> Word {
-        let word: Word = lo.into_lo_word() | hi.into_hi_word();
+        let word: Word = lo.as_lo_word() | hi.as_hi_word();
         word
     }
 
@@ -146,16 +106,6 @@ impl Addr {
         byte
     }
 
-    pub fn into_lo(self) -> Byte {
-        let byte: Byte = ((self.0 & 0x00FF) as u8).into();
-        byte
-    }
-
-    pub fn into_hi(self) -> Byte {
-        let byte: Byte = (((self.0 & 0xFF00) >> 8) as u8).into();
-        byte
-    }
-
     pub fn lo_addr(&self) -> Addr {
         let v: Addr = *self & 0x00FF.into();
         v
@@ -166,18 +116,8 @@ impl Addr {
         v
     }
 
-    pub fn into_lo_addr(self) -> Addr {
-        let v: Addr = self & 0x00FF.into();
-        v
-    }
-
-    pub fn into_hi_addr(self) -> Addr {
-        let v: Addr = self & 0xFF00.into();
-        v
-    }
-
     pub fn from_bytes(lo: Byte, hi: Byte) -> Addr {
-        let addr: Addr = lo.into_lo_addr() | hi.into_hi_addr();
+        let addr: Addr = lo.as_lo_addr() | hi.as_hi_addr();
         addr
     }
 
