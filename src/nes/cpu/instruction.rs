@@ -1306,6 +1306,31 @@ where
     (0, false)
 }
 
+// Instruction: Subtraction with Borrow In
+// Function:    A = A - M - (1 - C)
+// Flags Out:   C, V, N, Z
+//
+// Explanation:
+// Given the explanation for ADC above, we can reorganise our data
+// to use the same computation for addition, for subtraction by multiplying
+// the data by -1, i.e. make it negative
+//
+// A = A - M - (1 - C)  ->  A = A + -1 * (M - (1 - C))  ->  A = A + (-M + 1 + C)
+//
+// To make a signed positive number negative, we can invert the bits and add 1
+// (OK, I lied, a little bit of 1 and 2s complement :P)
+//
+//  5 = 00000101
+// -5 = 11111010 + 00000001 = 11111011 (or 251 in our 0 to 255 range)
+//
+// The range is actually unimportant, because if I take the value 15, and add 251
+// to it, given we wrap around at 256, the result is 10, so it has effectively
+// subtracted 5, which was the original intention. (15 + 251) % 256 = 10
+//
+// Note that the equation above used (1-C), but this got converted to + 1 + C.
+// This means we already have the +1, so all we need to do is invert the bits
+// of M, the data(!) therfore we can simply add, exactly the same way we did
+// before.
 fn sbc<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1316,7 +1341,23 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let acc = registers.get_a();
+    // We can invert the bottom 8 bits with bitwise xor
+    let val = fetched ^ 0xFF.into();
+    let res = acc.as_lo_word() + val.as_lo_word() + registers.get_carry().as_word();
+    // Magic....
+    let overflow =
+        (res ^ acc.as_lo_word()) & (res ^ val.as_lo_word() & 0x0080.into()) != 0x0000.into();
+
+    registers
+        .set_carry(res.hi() != 0x00.into())
+        .set_overflow(overflow)
+        .update_zero_by(res.lo())
+        .update_negative_by(res.lo())
+        .set_a(res.lo());
+
+    (0, true)
 }
 
 fn sec<T, U>(
