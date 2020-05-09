@@ -978,6 +978,9 @@ where
     (0, false)
 }
 
+// Instruction: Load The Accumulator
+// Function:    A = M
+// Flags Out:   N, Z
 fn lda<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -988,9 +991,19 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+
+    registers
+        .set_a(fetched)
+        .update_zero_by(fetched)
+        .update_negative_by(fetched);
+
+    (0, true)
 }
 
+// Instruction: Load The X Register
+// Function:    X = M
+// Flags Out:   N, Z
 fn ldx<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1001,9 +1014,19 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+
+    registers
+        .set_x(fetched)
+        .update_zero_by(fetched)
+        .update_negative_by(fetched);
+
+    (0, true)
 }
 
+// Instruction: Load The Y Register
+// Function:    Y = M
+// Flags Out:   N, Z
 fn ldy<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1014,7 +1037,14 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+
+    registers
+        .set_y(fetched)
+        .update_zero_by(fetched)
+        .update_negative_by(fetched);
+
+    (0, true)
 }
 
 fn lsr<T, U>(
