@@ -785,6 +785,9 @@ where
     (0, false)
 }
 
+// Instruction: Decrement X Register
+// Function:    X = X - 1
+// Flags Out:   N, Z
 fn dex<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -795,9 +798,17 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_x(registers.get_x().dec());
+    let res = registers.get_x();
+
+    registers.update_zero_by(res).update_negative_by(res);
+
+    (0, false)
 }
 
+// Instruction: Decrement Y Register
+// Function:    Y = Y - 1
+// Flags Out:   N, Z
 fn dey<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -808,7 +819,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_y(registers.get_y().dec());
+    let res = registers.get_y();
+
+    registers.update_zero_by(res).update_negative_by(res);
+
+    (0, false)
 }
 
 fn eor<T, U>(
