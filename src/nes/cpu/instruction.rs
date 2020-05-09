@@ -436,6 +436,8 @@ where
     (0, false)
 }
 
+// Instruction: Branch if Negative
+// Function:    if(N == 1) pc = address
 fn bmi<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -446,7 +448,20 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    if registers.get_negative() {
+        let mut additional_cycles: NumOfCycles = 1;
+        let addr = operand.unwrap_addr();
+
+        if !is_same_page(addr, registers.get_pc()) {
+            additional_cycles += 1;
+        }
+
+        jump_to(registers, addr);
+
+        (additional_cycles, false)
+    } else {
+        (0, false)
+    }
 }
 
 fn bne<T, U>(
