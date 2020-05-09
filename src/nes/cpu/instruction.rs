@@ -1465,6 +1465,9 @@ where
     (0, false)
 }
 
+// Instruction: Transfer Accumulator to X Register
+// Function:    X = A
+// Flags Out:   N, Z
 fn tax<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1475,9 +1478,19 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_a();
+
+    registers
+        .set_x(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
+// Instruction: Transfer Accumulator to Y Register
+// Function:    Y = A
+// Flags Out:   N, Z
 fn tay<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1488,9 +1501,19 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_a();
+
+    registers
+        .set_y(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
+// Instruction: Transfer Stack Pointer to X Register
+// Function:    X = stack pointer
+// Flags Out:   N, Z
 fn tsx<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1501,9 +1524,19 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_sp();
+
+    registers
+        .set_x(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
+// Instruction: Transfer X Register to Accumulator
+// Function:    A = X
+// Flags Out:   N, Z
 fn txa<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1514,9 +1547,18 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_x();
+
+    registers
+        .set_a(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
+// Instruction: Transfer X Register to Stack Pointer
+// Function:    stack pointer = X
 fn txs<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1527,9 +1569,16 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_x();
+
+    registers.set_sp(res);
+
+    (0, false)
 }
 
+// Instruction: Transfer Y Register to Accumulator
+// Function:    A = Y
+// Flags Out:   N, Z
 fn tya<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1540,9 +1589,17 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_y();
+
+    registers
+        .set_a(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
+// This function captures illegal opcodes
 fn xxx<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1553,5 +1610,5 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    (0, false)
 }
