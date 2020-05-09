@@ -166,6 +166,13 @@ where
     }
 }
 
+fn jump_to<T>(registers: &mut T, addr: Addr)
+where
+    T: CpuRegisters,
+{
+    registers.set_pc(addr);
+}
+
 // Instruction: Add with Carry In
 // Function:    A = A + M + C
 // Flags Out:   C, V, N, Z
@@ -320,6 +327,8 @@ where
     (0, false)
 }
 
+// Instruction: Branch if Carry Clear
+// Function:    if(C == 0) pc = address
 fn bcc<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -330,7 +339,20 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    if !registers.get_carry() {
+        let mut additional_cycles: NumOfCycles = 1;
+        let addr = operand.unwrap_addr();
+
+        if addr.hi() != registers.get_pc().hi() {
+            additional_cycles += 1;
+        }
+
+        jump_to(registers, addr);
+
+        (additional_cycles, false)
+    } else {
+        (0, false)
+    }
 }
 
 fn bcs<T, U>(
