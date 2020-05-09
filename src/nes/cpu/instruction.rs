@@ -187,6 +187,25 @@ where
     registers.dec_sp();
 }
 
+fn push_pc<T, U>(registers: &mut T, bus: &mut U)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let pc = registers.get_pc();
+    push(registers, bus, pc.hi());
+    push(registers, bus, pc.lo());
+}
+
+fn push_status<T, U>(registers: &mut T, bus: &mut U)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let status = registers.get_status();
+    push(registers, bus, status);
+}
+
 fn pop<T, U>(registers: &mut T, bus: &mut U) -> Byte
 where
     T: CpuRegisters,
@@ -555,11 +574,10 @@ where
     registers.inc_pc();
     registers.set_interrupt(true);
 
-    push(registers, bus, registers.get_pc().hi());
-    push(registers, bus, registers.get_pc().lo());
+    push_pc(registers, bus);
 
     registers.set_break_mode(true);
-    push(registers, bus, registers.get_status());
+    push_status(registers, bus);
     registers.set_break_mode(false);
 
     let pc = bus.read(0xFFFE.into()).as_lo_addr() | bus.read(0xFFFF.into()).as_hi_addr();
@@ -939,6 +957,8 @@ where
     (0, false)
 }
 
+// Instruction: Jump To Sub-Routine
+// Function:    Push current pc to stack, pc = address
 fn jsr<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -949,7 +969,13 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let addr = operand.unwrap_addr();
+
+    registers.dec_pc();
+    push_pc(registers, bus);
+    registers.set_pc(addr);
+
+    (0, false)
 }
 
 fn lda<T, U>(
