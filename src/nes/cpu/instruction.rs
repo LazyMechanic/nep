@@ -1360,6 +1360,8 @@ where
     (0, true)
 }
 
+// Instruction: Set Carry Flag
+// Function:    C = 1
 fn sec<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1370,9 +1372,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_carry(true);
+    (0, false)
 }
 
+// Instruction: Set Decimal Flag
+// Function:    D = 1
 fn sed<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1383,9 +1388,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_decimal_mode(true);
+    (0, false)
 }
 
+// Instruction: Set Interrupt Flag / Enable Interrupts
+// Function:    I = 1
 fn sei<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1396,7 +1404,8 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_interrupt(true);
+    (0, false)
 }
 
 fn sta<T, U>(
