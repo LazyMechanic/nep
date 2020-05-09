@@ -173,6 +173,10 @@ where
     registers.set_pc(addr);
 }
 
+fn is_same_page(left: Addr, right: Addr) -> bool {
+    left.hi() == right.hi()
+}
+
 // Instruction: Add with Carry In
 // Function:    A = A + M + C
 // Flags Out:   C, V, N, Z
@@ -343,7 +347,7 @@ where
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if addr.hi() != registers.get_pc().hi() {
+        if !is_same_page(addr, registers.get_pc()) {
             additional_cycles += 1;
         }
 
@@ -355,6 +359,8 @@ where
     }
 }
 
+// Instruction: Branch if Carry Set
+// Function:    if(C == 1) pc = address
 fn bcs<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -365,7 +371,20 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    if registers.get_carry() {
+        let mut additional_cycles: NumOfCycles = 1;
+        let addr = operand.unwrap_addr();
+
+        if !is_same_page(addr, registers.get_pc()) {
+            additional_cycles += 1;
+        }
+
+        jump_to(registers, addr);
+
+        (additional_cycles, false)
+    } else {
+        (0, false)
+    }
 }
 
 fn beq<T, U>(
