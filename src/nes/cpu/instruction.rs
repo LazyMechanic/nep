@@ -1176,6 +1176,8 @@ where
     (0, false)
 }
 
+// Instruction: Pop Status Register off Stack
+// Function:    Status <- stack
 fn plp<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1186,7 +1188,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = pop(registers, bus);
+
+    registers.set_status(res);
+
+    (0, false)
 }
 
 fn rol<T, U>(
