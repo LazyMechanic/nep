@@ -387,6 +387,8 @@ where
     }
 }
 
+// Instruction: Branch if Equal
+// Function:    if(Z == 1) pc = address
 fn beq<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -397,7 +399,20 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    if registers.get_zero() {
+        let mut additional_cycles: NumOfCycles = 1;
+        let addr = operand.unwrap_addr();
+
+        if !is_same_page(addr, registers.get_pc()) {
+            additional_cycles += 1;
+        }
+
+        jump_to(registers, addr);
+
+        (additional_cycles, false)
+    } else {
+        (0, false)
+    }
 }
 
 fn bit<T, U>(
