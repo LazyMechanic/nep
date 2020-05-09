@@ -1300,7 +1300,10 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    pop_pc(registers, bus);
+    registers.inc_pc();
+
+    (0, false)
 }
 
 fn sbc<T, U>(
