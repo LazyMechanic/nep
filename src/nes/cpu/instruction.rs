@@ -149,7 +149,7 @@ where
     T: CpuBus,
 {
     match operand {
-        Operand::None => Byte(0),
+        Operand::None => panic!("expected Operand::Byte || Operand::Addr, Operand::None handled"),
         Operand::Byte(v) => v,
         Operand::Addr(v) => bus.read(v),
     }
@@ -160,7 +160,7 @@ where
     T: CpuBus,
 {
     match operand {
-        Operand::None => (Byte(0), Addr(0)),
+        Operand::None => panic!("expected Operand::Byte || Operand::Addr, Operand::None handled"),
         Operand::Byte(v) => (v, Addr(0)),
         Operand::Addr(v) => (bus.read(v), v),
     }
@@ -175,6 +175,26 @@ where
 
 fn is_same_page(left: Addr, right: Addr) -> bool {
     left.hi() == right.hi()
+}
+
+fn push<T, U>(registers: &mut T, bus: &mut U, v: Byte)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let addr = registers.get_sp().into_lo_addr() | 0x0100.into();
+    bus.write(addr, v);
+    registers.dec_sp();
+}
+
+fn pop<T, U>(registers: &mut T, bus: &mut U) -> Byte
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    registers.inc_sp();
+    let addr = registers.get_sp().into_lo_addr() | 0x0100.into();
+    bus.read(addr)
 }
 
 // Instruction: Add with Carry In
@@ -518,6 +538,8 @@ where
     }
 }
 
+// Instruction: Break
+// Function:    Program Sourced Interrupt
 fn brk<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -528,7 +550,22 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    operand.unwrap_none();
+
+    registers.inc_pc();
+    registers.set_disable_interrupt(true);
+
+    push(registers, bus, registers.get_pc().hi());
+    push(registers, bus, registers.get_pc().lo());
+
+    registers.set_break_mode(true);
+    push(registers, bus, registers.get_status());
+    registers.set_break_mode(false);
+
+    let pc = bus.read(0xFFFE.into()).into_lo_addr() | bus.read(0xFFFF.into()).into_hi_addr();
+    registers.set_pc(pc);
+
+    (0, false)
 }
 
 fn bvc<T, U>(
