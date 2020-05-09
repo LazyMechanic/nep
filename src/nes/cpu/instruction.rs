@@ -921,6 +921,8 @@ where
     (0, false)
 }
 
+// Instruction: Jump To Location
+// Function:    pc = address
 fn jmp<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -931,7 +933,10 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let addr = operand.unwrap_addr();
+    jump_to(registers, addr);
+
+    (0, false)
 }
 
 fn jsr<T, U>(
