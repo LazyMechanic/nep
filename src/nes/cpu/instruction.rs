@@ -738,6 +738,9 @@ where
     (0, true)
 }
 
+// Instruction: Compare Y Register
+// Function:    C <- Y >= M      Z <- (Y - M) == 0
+// Flags Out:   N, C, Z
 fn cpy<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -748,7 +751,16 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let reg = registers.get_y();
+    let res = reg.as_lo_word() - fetched.as_lo_word();
+
+    registers
+        .set_carry(reg >= fetched)
+        .set_zero(res.lo().is_clear())
+        .set_negative(res.lo().is_neg());
+
+    (0, true)
 }
 
 fn dec<T, U>(
