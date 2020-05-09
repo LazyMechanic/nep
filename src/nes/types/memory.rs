@@ -64,6 +64,13 @@ impl Byte {
     pub fn is_clear(&self) -> bool {
         self.0 == 0x00
     }
+
+    pub fn inspect_bit(&self, bit_no: u8) -> bool {
+        match bit_no {
+            0..=7 => self.0 & (1u8 << bit_no) != 0,
+            _ => false,
+        }
+    }
 }
 
 impl Word {
@@ -105,6 +112,13 @@ impl Word {
     pub fn into_hi_word(self) -> Word {
         let v: Word = self & 0xFF00.into();
         v
+    }
+
+    pub fn inspect_bit(&self, bit_no: u16) -> bool {
+        match bit_no {
+            0..=15 => self.0 & (1u16 << bit_no) != 0,
+            _ => false,
+        }
     }
 
     pub fn from_bytes(lo: Byte, hi: Byte) -> Word {

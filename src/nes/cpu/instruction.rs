@@ -425,7 +425,15 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let acc = registers.get_a();
+
+    registers
+        .update_negative_by(fetched)
+        .update_zero_by(fetched & acc)
+        .set_overflow(fetched.inspect_bit(6));
+
+    (0, false)
 }
 
 fn bmi<T, U>(
