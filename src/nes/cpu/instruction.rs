@@ -1408,6 +1408,8 @@ where
     (0, false)
 }
 
+// Instruction: Store Accumulator at Address
+// Function:    M = A
 fn sta<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1418,9 +1420,15 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let addr = operand.unwrap_addr();
+    let res = registers.get_a();
+    bus.write(addr, res);
+
+    (0, false)
 }
 
+// Instruction: Store X Register at Address
+// Function:    M = X
 fn stx<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1431,9 +1439,15 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let addr = operand.unwrap_addr();
+    let res = registers.get_x();
+    bus.write(addr, res);
+
+    (0, false)
 }
 
+// Instruction: Store Y Register at Address
+// Function:    M = Y
 fn sty<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1444,7 +1458,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let addr = operand.unwrap_addr();
+    let res = registers.get_y();
+    bus.write(addr, res);
+
+    (0, false)
 }
 
 fn tax<T, U>(
