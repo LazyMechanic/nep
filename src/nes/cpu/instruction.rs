@@ -1131,6 +1131,9 @@ where
     (0, false)
 }
 
+// Instruction: Push Status Register to Stack
+// Function:    status -> stack
+// Note:        Break flag is set to 1 before push
 fn php<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1141,7 +1144,13 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_break_mode(true).set_reserved(true);
+
+    push_status(registers, bus);
+
+    registers.set_break_mode(false).set_reserved(false);
+
+    (0, false)
 }
 
 fn pla<T, U>(
