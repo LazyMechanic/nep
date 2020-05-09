@@ -702,17 +702,20 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
-    let res = acc.as_lo_word() - fetched.as_lo_word();
+    let reg = registers.get_a();
+    let res = reg.as_lo_word() - fetched.as_lo_word();
 
     registers
-        .set_carry(acc >= fetched)
+        .set_carry(reg >= fetched)
         .set_zero(res.lo().is_clear())
         .set_negative(res.lo().is_neg());
 
     (0, true)
 }
 
+// Instruction: Compare X Register
+// Function:    C <- X >= M      Z <- (X - M) == 0
+// Flags Out:   N, C, Z
 fn cpx<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -723,7 +726,16 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let reg = registers.get_x();
+    let res = reg.as_lo_word() - fetched.as_lo_word();
+
+    registers
+        .set_carry(reg >= fetched)
+        .set_zero(res.lo().is_clear())
+        .set_negative(res.lo().is_neg());
+
+    (0, true)
 }
 
 fn cpy<T, U>(
