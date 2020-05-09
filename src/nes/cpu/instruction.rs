@@ -827,6 +827,9 @@ where
     (0, false)
 }
 
+// Instruction: Bitwise Logic XOR
+// Function:    A = A xor M
+// Flags Out:   N, Z
 fn eor<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -837,7 +840,16 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let acc = registers.get_a();
+    let res = acc ^ fetched;
+
+    registers
+        .set_a(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, true)
 }
 
 fn inc<T, U>(
