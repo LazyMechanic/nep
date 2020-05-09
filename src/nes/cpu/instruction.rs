@@ -1090,6 +1090,9 @@ where
     };
 }
 
+// Instruction: Bitwise Logic OR
+// Function:    A = A | M
+// Flags Out:   N, Z
 fn ora<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1112,6 +1115,8 @@ where
     (0, true)
 }
 
+// Instruction: Push Accumulator to Stack
+// Function:    A -> stack
 fn pha<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -1122,7 +1127,8 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    push(registers, bus, registers.get_a());
+    (0, false)
 }
 
 fn php<T, U>(
