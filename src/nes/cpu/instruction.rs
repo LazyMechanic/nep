@@ -1057,7 +1057,21 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
+    let res = fetched >> 1;
+
+    registers.update_zero_by(res).update_negative_by(res);
+
+    match mode {
+        AddressingMode::IMP => {
+            registers.set_a(res);
+        }
+        _ => {
+            bus.write(addr, res);
+        }
+    }
+
+    (0, false)
 }
 
 fn nop<T, U>(

@@ -203,12 +203,10 @@ impl CpuRegisters for Registers {
     }
 
     fn update_negative_by(&mut self, v: Byte) -> &mut Self {
-        self.status.negative = v.is_neg();
-        self
+        self.set_negative(v.is_neg())
     }
 
     fn update_zero_by(&mut self, v: Byte) -> &mut Self {
-        self.status.zero = v.is_clear();
-        self
+        self.set_zero(v.is_clear())
     }
 }
