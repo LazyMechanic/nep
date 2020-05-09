@@ -216,6 +216,26 @@ where
     bus.read(addr)
 }
 
+fn pop_pc<T, U>(registers: &mut T, bus: &mut U)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let lo = pop(registers, bus);
+    let hi = pop(registers, bus);
+    let addr = Addr::from_bytes(lo, hi);
+    registers.set_pc(addr);
+}
+
+fn pop_status<T, U>(registers: &mut T, bus: &mut U)
+where
+    T: CpuRegisters,
+    U: CpuBus,
+{
+    let status = pop(registers, bus);
+    registers.set_status(status);
+}
+
 // Instruction: Add with Carry In
 // Function:    A = A + M + C
 // Flags Out:   C, V, N, Z
@@ -1188,10 +1208,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = pop(registers, bus);
-
-    registers.set_status(res);
-
+    pop_status(registers, bus);
     (0, false)
 }
 
@@ -1265,7 +1282,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    pop_status(registers, bus);
+    registers.set_break_mode(false).set_reserved(false);
+
+    pop_pc(registers, bus);
+
+    (0, false)
 }
 
 fn rts<T, U>(
