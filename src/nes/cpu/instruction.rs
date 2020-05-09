@@ -1084,7 +1084,10 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    return match mode {
+        AddressingMode::ABX => (0, true),
+        _ => (0, false),
+    };
 }
 
 fn ora<T, U>(
