@@ -1235,7 +1235,24 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
+    let res = (fetched.as_lo_word() >> 1) | (registers.get_carry().as_word() << 7);
+
+    registers
+        .set_carry(res.hi() != 0x00.into())
+        .update_zero_by(res.lo())
+        .update_negative_by(res.lo());
+
+    match mode {
+        AddressingMode::IMP => {
+            registers.set_a(res.lo());
+        }
+        _ => {
+            bus.write(addr, res.lo());
+        }
+    }
+
+    (0, false)
 }
 
 fn rti<T, U>(
