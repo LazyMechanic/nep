@@ -596,6 +596,8 @@ where
     }
 }
 
+// Instruction: Branch if Overflow Set
+// Function:    if(V == 1) pc = address
 fn bvs<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -606,7 +608,20 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    if registers.get_overflow() {
+        let mut additional_cycles: NumOfCycles = 1;
+        let addr = operand.unwrap_addr();
+
+        if !is_same_page(addr, registers.get_pc()) {
+            additional_cycles += 1;
+        }
+
+        jump_to(registers, addr);
+
+        (additional_cycles, false)
+    } else {
+        (0, false)
+    }
 }
 
 fn clc<T, U>(
