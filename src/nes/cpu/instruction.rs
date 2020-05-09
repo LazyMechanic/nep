@@ -312,8 +312,8 @@ where
 
     registers
         .set_a(res)
-        .set_zero(res.is_clear())
-        .set_negative(res.is_neg());
+        .update_zero_by(res)
+        .update_negative_by(res);
 
     (0, true)
 }
@@ -336,8 +336,8 @@ where
 
     registers
         .set_carry(res.hi() > 0x00.into())
-        .set_zero(res.lo().is_clear())
-        .set_negative(res.lo().is_neg());
+        .update_zero_by(res.lo())
+        .update_negative_by(res.lo());
 
     match mode {
         AddressingMode::ACC => {
@@ -707,8 +707,8 @@ where
 
     registers
         .set_carry(reg >= fetched)
-        .set_zero(res.lo().is_clear())
-        .set_negative(res.lo().is_neg());
+        .update_zero_by(res.lo())
+        .update_negative_by(res.lo());
 
     (0, true)
 }
@@ -732,8 +732,8 @@ where
 
     registers
         .set_carry(reg >= fetched)
-        .set_zero(res.lo().is_clear())
-        .set_negative(res.lo().is_neg());
+        .update_zero_by(res.lo())
+        .update_negative_by(res.lo());
 
     (0, true)
 }
@@ -757,12 +757,15 @@ where
 
     registers
         .set_carry(reg >= fetched)
-        .set_zero(res.lo().is_clear())
-        .set_negative(res.lo().is_neg());
+        .update_zero_by(res.lo())
+        .update_negative_by(res.lo());
 
     (0, true)
 }
 
+// Instruction: Decrement Value at Memory Location
+// Function:    M = M - 1
+// Flags Out:   N, Z
 fn dec<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -773,7 +776,13 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let (mut fetched, addr) = unwrap_operand_with_addr(bus, operand);
+    let res = fetched.dec();
+
+    bus.write(addr, res);
+    registers.update_zero_by(res).update_negative_by(res);
+
+    (0, false)
 }
 
 fn dex<T, U>(

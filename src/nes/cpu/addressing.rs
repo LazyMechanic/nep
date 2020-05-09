@@ -174,7 +174,7 @@ where
         fetch_byte(cpu_registers, cpu_bus).as_lo_addr() + cpu_registers.get_x().as_lo_addr();
 
     let lo = cpu_bus.read(base);
-    let hi = cpu_bus.read(*base.inc());
+    let hi = cpu_bus.read(base.inc());
 
     let addr = Addr::from_bytes(lo, hi);
 
@@ -189,7 +189,7 @@ where
     let mut base = fetch_byte(cpu_registers, cpu_bus).as_lo_addr();
 
     let lo = cpu_bus.read(base);
-    let hi = cpu_bus.read(*base.inc());
+    let hi = cpu_bus.read(base.inc());
 
     let addr = Addr::from_bytes(lo, hi) + cpu_registers.get_y().as_lo_addr();
 

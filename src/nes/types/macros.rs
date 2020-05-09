@@ -46,14 +46,14 @@ macro_rules! math_type {
         }
 
         impl $name {
-            pub fn inc(&mut self) -> &mut Self {
-                self.0 += 1;
-                self
+            pub fn inc(&mut self) -> Self {
+                self.0.overflowing_add(1);
+                *self
             }
 
-            pub fn dec(&mut self) -> &mut Self {
-                self.0 -= 1;
-                self
+            pub fn dec(&mut self) -> Self {
+                self.0.overflowing_sub(1);
+                *self
             }
         }
     };
