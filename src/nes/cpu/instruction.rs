@@ -852,6 +852,9 @@ where
     (0, true)
 }
 
+// Instruction: Increment Value at Memory Location
+// Function:    M = M + 1
+// Flags Out:   N, Z
 fn inc<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -862,7 +865,13 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let (mut fetched, addr) = unwrap_operand_with_addr(bus, operand);
+    let res = fetched.inc();
+
+    bus.write(addr, res);
+    registers.update_zero_by(res).update_negative_by(res);
+
+    (0, false)
 }
 
 fn inx<T, U>(
