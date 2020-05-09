@@ -1100,7 +1100,16 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let fetched = unwrap_operand(bus, operand);
+    let acc = registers.get_a();
+    let res = acc | fetched;
+
+    registers
+        .set_a(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, true)
 }
 
 fn pha<T, U>(
