@@ -9,7 +9,7 @@ pub trait CpuRegisters {
     fn get_pc(&self) -> Addr;
     fn get_carry(&self) -> bool;
     fn get_zero(&self) -> bool;
-    fn get_disable_interrupt(&self) -> bool;
+    fn get_interrupt(&self) -> bool;
     fn get_decimal_mode(&self) -> bool;
     fn get_break_mode(&self) -> bool;
     fn get_reserved(&self) -> bool;
@@ -24,7 +24,7 @@ pub trait CpuRegisters {
     fn set_pc(&mut self, v: Addr) -> &mut Self;
     fn set_carry(&mut self, v: bool) -> &mut Self;
     fn set_zero(&mut self, v: bool) -> &mut Self;
-    fn set_disable_interrupt(&mut self, v: bool) -> &mut Self;
+    fn set_interrupt(&mut self, v: bool) -> &mut Self;
     fn set_decimal_mode(&mut self, v: bool) -> &mut Self;
     fn set_break_mode(&mut self, v: bool) -> &mut Self;
     fn set_reserved(&mut self, v: bool) -> &mut Self;
@@ -84,8 +84,8 @@ impl CpuRegisters for Registers {
         self.status.zero
     }
 
-    fn get_disable_interrupt(&self) -> bool {
-        self.status.disable_interrupt
+    fn get_interrupt(&self) -> bool {
+        self.status.interrupt
     }
 
     fn get_decimal_mode(&self) -> bool {
@@ -147,8 +147,8 @@ impl CpuRegisters for Registers {
         self
     }
 
-    fn set_disable_interrupt(&mut self, v: bool) -> &mut Self {
-        self.status.disable_interrupt = v;
+    fn set_interrupt(&mut self, v: bool) -> &mut Self {
+        self.status.interrupt = v;
         self
     }
 

@@ -553,7 +553,7 @@ where
     operand.unwrap_none();
 
     registers.inc_pc();
-    registers.set_disable_interrupt(true);
+    registers.set_interrupt(true);
 
     push(registers, bus, registers.get_pc().hi());
     push(registers, bus, registers.get_pc().lo());
@@ -624,6 +624,8 @@ where
     }
 }
 
+// Instruction: Clear Carry Flag
+// Function:    C = 0
 fn clc<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -634,9 +636,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_carry(false);
+    (0, false)
 }
 
+// Instruction: Clear Decimal Flag
+// Function:    D = 0
 fn cld<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -647,9 +652,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_decimal_mode(false);
+    (0, false)
 }
 
+// Instruction: Disable Interrupts / Clear Interrupt Flag
+// Function:    I = 0
 fn cli<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -660,9 +668,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_interrupt(false);
+    (0, false)
 }
 
+// Instruction: Clear Overflow Flag
+// Function:    V = 0
 fn clv<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -673,7 +684,8 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    registers.set_overflow(false);
+    (0, false)
 }
 
 fn cmp<T, U>(
