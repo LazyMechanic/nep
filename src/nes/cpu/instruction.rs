@@ -798,10 +798,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    registers.set_x(registers.get_x().dec());
-    let res = registers.get_x();
+    let res = registers.get_x().dec();
 
-    registers.update_zero_by(res).update_negative_by(res);
+    registers
+        .set_x(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
 
     (0, false)
 }
@@ -819,10 +821,12 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    registers.set_y(registers.get_y().dec());
-    let res = registers.get_y();
+    let res = registers.get_y().dec();
 
-    registers.update_zero_by(res).update_negative_by(res);
+    registers
+        .set_y(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
 
     (0, false)
 }
@@ -874,6 +878,9 @@ where
     (0, false)
 }
 
+// Instruction: Increment X Register
+// Function:    X = X + 1
+// Flags Out:   N, Z
 fn inx<T, U>(
     mode: &AddressingMode,
     registers: &mut T,
@@ -884,7 +891,14 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_x().inc();
+
+    registers
+        .set_x(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
 fn iny<T, U>(
@@ -897,7 +911,14 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    unimplemented!();
+    let res = registers.get_y().inc();
+
+    registers
+        .set_y(res)
+        .update_zero_by(res)
+        .update_negative_by(res);
+
+    (0, false)
 }
 
 fn jmp<T, U>(
