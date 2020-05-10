@@ -33,6 +33,9 @@ impl<'a> CpuBus for Bus<'a> {
     }
 
     fn write(&mut self, addr: Addr, v: Byte) {
-        unimplemented!()
+        match addr {
+            Addr(0x0000..=0x1FFF) => self.ram.write(addr & 0x07FF.into(), v),
+            _ => panic!("[CPUBUS] Write to an illegal address (0x{:X})", addr),
+        }
     }
 }
