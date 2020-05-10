@@ -116,6 +116,10 @@ impl Addr {
         v
     }
 
+    pub fn as_usize(&self) -> usize {
+        self.0 as usize
+    }
+
     pub fn from_bytes(lo: Byte, hi: Byte) -> Addr {
         let addr: Addr = lo.as_lo_addr() | hi.as_hi_addr();
         addr
