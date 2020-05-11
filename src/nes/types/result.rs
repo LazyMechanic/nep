@@ -1,9 +1,3 @@
-use snafu::Snafu;
-
-#[derive(Debug, Snafu)]
-pub enum Error {
-    #[snafu(display("Error with message: {}", msg))]
-    WithMsg { msg: String },
-}
+use super::errors::*;
 
 pub type Result<T> = std::result::Result<T, Error>;

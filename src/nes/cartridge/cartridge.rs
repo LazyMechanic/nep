@@ -1,0 +1,217 @@
+use crate::prelude::*;
+use std::cmp;
+use std::fs;
+use std::fs::File;
+use std::path::Path;
+use std::str;
+
+use std::io::prelude::*;
+use std::io::SeekFrom;
+
+pub enum Mirror {
+    Horizontal,
+    Vertical,
+}
+
+pub struct Cartridge {
+    prg_mem:   Vec<Byte>,
+    chr_mem:   Vec<Byte>,
+    mapper_id: u8,
+    prg_banks: usize,
+    chr_banks: usize,
+    mirror:    Mirror,
+}
+
+const PROGRAM_ROM_SIZE: usize = 16384;
+const CHARACTER_ROM_SIZE: usize = 8192;
+const HEADER_SIZE: usize = 16;
+
+impl Cartridge {
+    pub fn from_file<P>(file_path: P) -> Result<Self>
+    where
+        P: AsRef<Path>,
+    {
+        println!("[CARTGE] start read file: {}", file_path.as_ref().display());
+        // iNES header format (16 bytes):
+        // 0-3: Constant $4E $45 $53 $1A ("NES" followed by MS-DOS end-of-file)
+        // 4: Size of PRG ROM in 16 KB units
+        // 5: Size of CHR ROM in 8 KB units (Value 0 means the board uses CHR RAM)
+        // 6: Flags 6 - Mapper, mirroring, battery, trainer
+        // 7: Flags 7 - Mapper, VS/Playchoice, NES 2.0
+        // 8: Flags 8 - PRG-RAM size (rarely used extension)
+        // 9: Flags 9 - TV system (rarely used extension)
+        // 10: Flags 10 - TV system, PRG-RAM presence (unofficial, rarely used extension)
+        // 11-15: Unused padding (should be filled with zero, but some rippers put their name across bytes 7-15)
+
+        // Flags 6
+        // 76543210
+        // ||||||||
+        // |||||||+- Mirroring: 0: horizontal (vertical arrangement) (CIRAM A10 = PPU A11)
+        // |||||||              1: vertical (horizontal arrangement) (CIRAM A10 = PPU A10)
+        // ||||||+-- 1: Cartridge contains battery-backed PRG RAM ($6000-7FFF) or other persistent memory
+        // |||||+--- 1: 512-byte trainer at $7000-$71FF (stored before PRG data)
+        // ||||+---- 1: Ignore mirroring control or above mirroring bit; instead provide four-screen VRAM
+        // ++++----- Lower nybble of mapper number
+
+        // Flags 7
+        // 76543210
+        // ||||||||
+        // |||||||+- VS Unisystem
+        // ||||||+-- PlayChoice-10 (8KB of Hint Screen data stored after CHR data)
+        // ||||++--- If equal to 2, flags 8-15 are in NES 2.0 format
+        // ++++----- Upper nybble of mapper number
+
+        // Flags 8
+        // 76543210
+        // ||||||||
+        // ++++++++- PRG RAM size
+
+        // Flags 9
+        // 76543210
+        // ||||||||
+        // |||||||+- TV system (0: NTSC; 1: PAL)
+        // +++++++-- Reserved, set to zero
+
+        // Flags 10
+        // 76543210
+        //   ||  ||
+        //   ||  ++- TV system (0: NTSC; 2: PAL; 1/3: dual compatible)
+        //   |+----- PRG RAM ($6000-$7FFF) (0: present; 1: not present)
+        //   +------ 0: Board has no bus conflicts; 1: Board has bus conflicts
+
+        let mut file = File::open(file_path).context(errors::OpenFile)?;
+
+        let mut header_buf: [u8; HEADER_SIZE] = [0; HEADER_SIZE];
+        let header_size = file.read(&mut header_buf).context(errors::ReadFile)?;
+
+        if header_size < 16 {
+            return errors::ReadCartridge {
+                detail: format!(
+                    "cannot read iNES header, file size less 16 byte, size = {}",
+                    header_size
+                ),
+            }
+            .fail();
+        }
+
+        let name = &header_buf[0..3];
+        let ines = str::from_utf8(&name).unwrap();
+        if ines != "NES" {
+            return errors::ReadCartridge {
+                detail: format!(
+                    "cannot read iNES header, invalid name constant, [0..3] = {}",
+                    ines
+                ),
+            }
+            .fail();
+        }
+
+        let prg_rom_size = header_buf[4] as usize;
+        println!("[CARTGE] program rom size: {}", prg_rom_size);
+
+        let chr_rom_size = header_buf[5] as usize;
+        println!("[CARTGE] character rom size: {}", chr_rom_size);
+
+        let flags_6 = header_buf[6];
+        println!("[CARTGE] flags 6: {0:#010b} ({0:#04x})", flags_6);
+        multiline_println!(
+            "                    ||||||||",
+            "                    |||||||+- Mirroring: 0: horizontal (vertical arrangement) (CIRAM A10 = PPU A11)",
+            "                    |||||||              1: vertical (horizontal arrangement) (CIRAM A10 = PPU A10)",
+            "                    ||||||+-- 1: Cartridge contains battery-backed PRG RAM ($6000-7FFF) or other persistent memory",
+            "                    |||||+--- 1: 512-byte trainer at $7000-$71FF (stored before PRG data)",
+            "                    ||||+---- 1: Ignore mirroring control or above mirroring bit; instead provide four-screen VRAM",
+            "                    ++++----- Lower nybble of mapper number"
+        );
+        println!();
+
+        let flags_7 = header_buf[7];
+        println!("[CARTGE] flags 7: {0:#010b} ({0:#04x})", flags_7);
+        multiline_println!(
+             "                    ||||||||",
+             "                    |||||||+- VS Unisystem",
+             "                    ||||||+-- PlayChoice-10 (8KB of Hint Screen data stored after CHR data)",
+             "                    ||||++--- If equal to 2, flags 8-15 are in NES 2.0 format",
+             "                    ++++----- Upper nybble of mapper number");
+        println!();
+
+        let flags_8 = header_buf[8] as usize;
+        println!("[CARTGE] flags 8: {0:#010b} ({0:#04x})", flags_8);
+        multiline_println!(
+            "                    ||||||||",
+            "                    ++++++++- PRG RAM size"
+        );
+        println!();
+
+        let flags_9 = header_buf[9] as usize;
+        println!("[CARTGE] flags 9: {0:#010b} ({0:#04x})", flags_9);
+        multiline_println!(
+            "                    ||||||||",
+            "                    |||||||+- TV system (0: NTSC; 1: PAL)",
+            "                    +++++++-- Reserved, set to zero"
+        );
+        println!();
+
+        let flags_10 = header_buf[10] as usize;
+        println!("[CARTGE] flags 10: {0:#010b} ({0:#04x})", flags_10);
+        multiline_println!(
+             "                      ||  ||",
+             "                      ||  ++- TV system (0: NTSC; 2: PAL; 1/3: dual compatible)",
+             "                      |+----- PRG RAM ($6000-$7FFF) (0: present; 1: not present)",
+             "                      +------ 0: Board has no bus conflicts; 1: Board has bus conflicts");
+        println!();
+
+        // If a "trainer" exists we just need to read past
+        // it before we get to the good stuff
+        if flags_6 & 0b0000_0100 != 0 {
+            file.seek(SeekFrom::Current(512));
+        }
+
+        // Determine mapper id
+        //   0bAAAAxxxx (flags_7)
+        // | 0bxxxxBBBB (flags_6)
+        // = 0bAAAABBBB
+        let mapper_id = (flags_7 & 0xF0) | ((flags_6 >> 4) & 0x0F);
+
+        // Mirroring
+        let mirror = if flags_6 & 0x01 != 0x00 {
+            Mirror::Vertical
+        } else {
+            Mirror::Horizontal
+        };
+
+        let mut prg_mem: Vec<u8> = Vec::new();
+        let mut chr_mem: Vec<u8> = Vec::new();
+
+        let prg_banks = prg_rom_size;
+        // banks * 16kb
+        prg_mem.resize(prg_banks * PROGRAM_ROM_SIZE, 0);
+        file.read(&mut prg_mem);
+
+        let chr_banks = cmp::max(1, chr_rom_size);
+        // banks * 8kb
+        chr_mem.resize(chr_banks * CHARACTER_ROM_SIZE, 0);
+        file.read(&mut chr_mem);
+
+        Ok(Self {
+            prg_mem: prg_mem.into_iter().map(Byte).collect(),
+            chr_mem: chr_mem.into_iter().map(Byte).collect(),
+            mapper_id,
+            prg_banks,
+            chr_banks,
+            mirror,
+        })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn loads_from_file() -> Result<()> {
+        const FILE_PATH: &str = "./roms/nestest.nes";
+        let cartridge = Cartridge::from_file(FILE_PATH)?;
+        Ok(())
+    }
+}
