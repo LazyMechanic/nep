@@ -18,5 +18,5 @@ impl Cpu {
 
     pub fn nmi(&mut self) {}
 
-    pub fn clock(&mut self) {}
+    pub fn step(&mut self) {}
 }
