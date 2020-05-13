@@ -17,9 +17,9 @@ impl StatusRegister {
         StatusRegister {
             carry:        false,
             zero:         false,
-            interrupt:    true,
+            interrupt:    false,
             decimal_mode: false,
-            break_mode:   true,
+            break_mode:   false,
             reserved:     true,
             overflow:     false,
             negative:     false,

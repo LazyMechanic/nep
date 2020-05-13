@@ -1,5 +1,7 @@
+use super::bus::CpuBus;
 use super::status_register::StatusRegister;
 use crate::prelude::*;
+use sdl2::render::TextureAccess::Static;
 
 pub trait CpuRegisters {
     fn get_a(&self) -> Byte;
@@ -53,6 +55,34 @@ pub struct Registers {
     pub pc:     Addr,
     // Program counter
     pub status: StatusRegister, // Status register
+}
+
+impl Registers {
+    pub fn new<T>(bus: &mut T) -> Self
+    where
+        T: CpuBus,
+    {
+        let a: Byte = 0x00.into();
+        let x: Byte = 0x00.into();
+        let y: Byte = 0x00.into();
+        let sp: Byte = 0xFD.into();
+        let status = StatusRegister::new();
+        let pc = {
+            let mut pc_addr_base = 0xFFFC.into();
+            let lo = bus.read(pc_addr_base);
+            let hi = bus.read(pc_addr_base.inc());
+            Addr::from_bytes(lo, hi)
+        };
+
+        Self {
+            a,
+            x,
+            y,
+            sp,
+            pc,
+            status,
+        }
+    }
 }
 
 impl CpuRegisters for Registers {

@@ -6,14 +6,14 @@ use lazy_static::lazy_static;
 
 #[derive(Debug, Clone)]
 pub struct OpCode {
-    pub inst:  Instruction,
-    pub mode:  AddressingMode,
-    pub cycle: NumOfCycles,
+    pub inst:   Instruction,
+    pub mode:   AddressingMode,
+    pub cycles: NumOfCycles,
 }
 
 impl OpCode {
-    pub fn new(inst: Instruction, mode: AddressingMode, cycle: NumOfCycles) -> OpCode {
-        OpCode { inst, mode, cycle }
+    pub fn new(inst: Instruction, mode: AddressingMode, cycles: NumOfCycles) -> OpCode {
+        OpCode { inst, mode, cycles }
     }
 }
 
