@@ -1,4 +1,6 @@
+use super::mappers::{Mapper, Mapper000};
 use crate::prelude::*;
+
 use std::cmp;
 use std::fs;
 use std::fs::File;
@@ -14,17 +16,17 @@ pub enum Mirror {
 }
 
 pub struct Cartridge {
-    prg_mem:   Vec<Byte>,
-    chr_mem:   Vec<Byte>,
-    mapper_id: u8,
-    prg_banks: usize,
-    chr_banks: usize,
-    mirror:    Mirror,
+    prg_mem: Vec<Byte>,
+    chr_mem: Vec<Byte>,
+    mirror:  Mirror,
+    mapper:  Box<dyn Mapper>,
 }
 
-const PROGRAM_ROM_SIZE: usize = 16384;
-const CHARACTER_ROM_SIZE: usize = 8192;
-const HEADER_SIZE: usize = 16;
+const PROGRAM_ROM_SIZE: usize = 16384; // 16 kb
+const CHARACTER_ROM_SIZE: usize = 8192; // 16 kb
+const PROGRAM_RAM_SIZE: usize = 8192; // 8 kb
+const CHARACTER_RAM_SIZE: usize = 8192; // 8 kb
+const HEADER_SIZE: usize = 16; // 2 byte
 
 impl Cartridge {
     pub fn from_file<P>(file_path: P) -> Result<Self>
@@ -106,11 +108,11 @@ impl Cartridge {
             .fail();
         }
 
-        let prg_rom_size = header_buf[4] as usize;
-        println!("[CARTGE] program rom size: {}", prg_rom_size);
+        let prg_rom_banks = header_buf[4] as usize;
+        println!("[CARTGE] program rom banks: {}", prg_rom_banks);
 
-        let chr_rom_size = header_buf[5] as usize;
-        println!("[CARTGE] character rom size: {}", chr_rom_size);
+        let chr_rom_banks = header_buf[5] as usize;
+        println!("[CARTGE] character rom banks: {}", chr_rom_banks);
 
         let flags_6 = header_buf[6];
         println!("[CARTGE] flags 6: {0:#010b} ({0:#04x})", flags_6);
@@ -173,6 +175,12 @@ impl Cartridge {
         // = 0bAAAABBBB
         let mapper_id = (flags_7 & 0xF0) | ((flags_6 >> 4) & 0x0F);
 
+        let file_type = flags_7 & 0b0000_1100;
+        const NES_2_0: u8 = 0b0000_1000;
+
+        // Determine program ram size
+        let prg_ram_size = flags_8;
+
         // Mirroring
         let mirror = if flags_6 & 0x01 != 0x00 {
             Mirror::Vertical
@@ -180,27 +188,75 @@ impl Cartridge {
             Mirror::Horizontal
         };
 
-        let mut prg_mem: Vec<u8> = Vec::new();
-        let mut chr_mem: Vec<u8> = Vec::new();
+        let (prg_mem, prg_banks) = {
+            let banks = if file_type == NES_2_0 {
+                // NES 2.0 FORMAT
+                ((prg_ram_size & 0b0000_0000_0000_0111) << 8) | prg_rom_banks
+            } else {
+                // NOT NES 2.0 FORMAT
+                cmp::max(1, prg_rom_banks)
+            };
 
-        let prg_banks = prg_rom_size;
-        // banks * 16kb
-        prg_mem.resize(prg_banks * PROGRAM_ROM_SIZE, 0);
-        file.read(&mut prg_mem);
+            // banks * 16kb
+            let s = banks * PROGRAM_ROM_SIZE;
+            let mut v: Vec<u8> = Vec::new();
+            v.resize(s, 0);
+            file.read(&mut v);
 
-        let chr_banks = cmp::max(1, chr_rom_size);
-        // banks * 8kb
-        chr_mem.resize(chr_banks * CHARACTER_ROM_SIZE, 0);
-        file.read(&mut chr_mem);
+            (v.into_iter().map(Byte).collect(), banks)
+        };
+
+        let (chr_mem, chr_banks) = {
+            let banks = if file_type == NES_2_0 {
+                // NES 2.0 FORMAT
+                ((prg_ram_size & 0b0000_0000_0011_1000) << 8) | prg_rom_banks
+            } else {
+                // NOT NES 2.0 FORMAT
+                // If banks eq 0 than chr_mem is RAM, otherwise is ROM
+                cmp::max(1, chr_rom_banks)
+            };
+
+            // banks * 8kb
+            let s = banks * CHARACTER_ROM_SIZE;
+            let mut v: Vec<u8> = Vec::new();
+            v.resize(s, 0);
+            file.read(&mut v);
+
+            (v.into_iter().map(Byte).collect(), banks)
+        };
+
+        let mapper: Box<dyn Mapper> = match mapper_id {
+            0 => Box::new(Mapper000::new(prg_banks, chr_banks)),
+            _ => {
+                return errors::ReadCartridge {
+                    detail: format!("unknown mapper id = {}", mapper_id),
+                }
+                .fail();
+            }
+        };
 
         Ok(Self {
-            prg_mem: prg_mem.into_iter().map(Byte).collect(),
-            chr_mem: chr_mem.into_iter().map(Byte).collect(),
-            mapper_id,
-            prg_banks,
-            chr_banks,
+            prg_mem,
+            chr_mem,
             mirror,
+            mapper,
         })
+    }
+
+    pub fn read(&mut self, addr: Addr) -> Byte {
+        unimplemented!();
+    }
+
+    pub fn write(&mut self, addr: Addr, v: Byte) {
+        unimplemented!();
+    }
+
+    pub fn read_chr(&mut self, addr: Addr) -> Byte {
+        unimplemented!();
+    }
+
+    pub fn write_chr(&mut self, addr: Addr, v: Byte) {
+        unimplemented!();
     }
 }
 
