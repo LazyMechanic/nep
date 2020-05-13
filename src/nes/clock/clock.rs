@@ -14,7 +14,7 @@ impl Clock {
     }
 
     pub fn update(&mut self) {
-        self.counter += 1;
+        self.counter = self.counter.overflowing_add(1).0;
     }
 
     pub fn need_step_cpu(&self) -> bool {
