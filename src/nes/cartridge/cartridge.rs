@@ -13,6 +13,7 @@ use std::io::SeekFrom;
 pub enum Mirror {
     Horizontal,
     Vertical,
+    Hardware,
 }
 
 pub struct Cartridge {

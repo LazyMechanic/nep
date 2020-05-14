@@ -3,6 +3,7 @@ use super::macros::*;
 math_type!(Byte, u8);
 math_type!(Word, u16);
 math_type!(Addr, u16);
+math_type!(ExtAddr, u32);
 
 impl Byte {
     pub fn as_hi_word(&self) -> Word {
@@ -116,6 +117,16 @@ impl Addr {
         v
     }
 
+    pub fn as_lo_ext_addr(&self) -> ExtAddr {
+        let v: ExtAddr = (0x0000FFFF & ((self.0 as u32) << 0)).into();
+        v
+    }
+
+    pub fn as_hi_ext_addr(&self) -> ExtAddr {
+        let v: ExtAddr = (0xFFFF0000 & ((self.0 as u32) << 16)).into();
+        v
+    }
+
     pub fn as_usize(&self) -> usize {
         self.0 as usize
     }
@@ -131,6 +142,12 @@ impl Addr {
 
     pub fn with_lo_set() -> Addr {
         0x00FF.into()
+    }
+}
+
+impl ExtAddr {
+    pub fn as_usize(&self) -> usize {
+        self.0 as usize
     }
 }
 
@@ -167,5 +184,23 @@ impl From<&Addr> for Word {
 impl From<&mut Addr> for Word {
     fn from(v: &mut Addr) -> Self {
         Self(v.0)
+    }
+}
+
+impl From<Addr> for ExtAddr {
+    fn from(v: Addr) -> Self {
+        Self(v.0 as u32)
+    }
+}
+
+impl From<&Addr> for ExtAddr {
+    fn from(v: &Addr) -> Self {
+        Self(v.0 as u32)
+    }
+}
+
+impl From<&mut Addr> for ExtAddr {
+    fn from(v: &mut Addr) -> Self {
+        Self(v.0 as u32)
     }
 }

@@ -30,7 +30,7 @@ impl<'a> CpuBus for Bus<'a> {
             Addr(0x4016) => unimplemented!(),          // TODO: self.joy.read(),
             Addr(0x4017) => Byte(0),                   // TODO: 2 player
             Addr(0x4000..=0x4017) => unimplemented!(), // TODO: self.apu.read(addr - 0x4000.into()),
-            Addr(0x4018..=0xFFFF) => self.cart.read(addr),
+            Addr(0x6000..=0xFFFF) => self.cart.read(addr),
             // // Read ROM
             // //   0b1000'1001'1001'0011 {0x8993}
             // // - 0b1000'0000'0000'0000 {0x8000}

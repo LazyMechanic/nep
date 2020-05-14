@@ -312,9 +312,11 @@ where
     let carry = registers.get_carry();
 
     let res = fetched.as_lo_word() + acc.as_lo_word() + carry.as_word();
+    let overflow = !((acc ^ fetched) & 0x80.into() != 0x00.into())
+        && ((acc ^ res.lo()) & 0x80.into() != 0x00.into());
 
     registers
-        .set_overflow(!(acc ^ fetched).is_neg() && (acc ^ res.lo()).is_neg())
+        .set_overflow(overflow)
         .update_negative_by(res.lo())
         .update_zero_by(res.lo())
         .set_carry(res > 0x00FF.into())
@@ -379,7 +381,7 @@ where
         .update_negative_by(res.lo());
 
     match mode {
-        AddressingMode::ACC => {
+        AddressingMode::IMP => {
             registers.set_a(res.lo());
         }
         _ => {
