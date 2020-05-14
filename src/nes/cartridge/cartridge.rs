@@ -245,19 +245,56 @@ impl Cartridge {
     }
 
     pub fn read(&mut self, addr: Addr) -> Byte {
-        unimplemented!();
+        let mut mapped_addr: ExtAddr = 0xFFFF_FFFF.into();
+        let mut value: Byte = 0x00.into();
+
+        if self.mapper.map_read(addr, &mut mapped_addr, &mut value) {
+            if mapped_addr == 0xFFFF_FFFF.into() {
+                // Mapper has actually set the data value, for example cartridge based RAM
+                // Do nothing
+            } else {
+                // Mapper has produced an offset into cartridge bank memory
+                value = self.prg_mem[mapped_addr.as_usize()];
+            }
+        }
+
+        value
     }
 
     pub fn write(&mut self, addr: Addr, v: Byte) {
-        unimplemented!();
+        let mut mapped_addr: ExtAddr = 0xFFFF_FFFF.into();
+
+        if self.mapper.map_write(addr, &mut mapped_addr, v) {
+            if mapped_addr == 0xFFFF_FFFF.into() {
+                // Mapper has actually set the data value, for example cartridge based RAM
+                // Do nothing
+            } else {
+                // Mapper has produced an offset into cartridge bank memory
+                self.prg_mem[mapped_addr.as_usize()] = v;
+            }
+        }
     }
 
     pub fn read_chr(&mut self, addr: Addr) -> Byte {
-        unimplemented!();
+        let mut mapped_addr: ExtAddr = 0xFFFF_FFFF.into();
+
+        let value = if self.mapper.map_read_chr(addr, &mut mapped_addr) {
+            // Mapper has produced an offset into cartridge bank memory
+            self.chr_mem[mapped_addr.as_usize()]
+        } else {
+            Byte(0)
+        };
+
+        value
     }
 
     pub fn write_chr(&mut self, addr: Addr, v: Byte) {
-        unimplemented!();
+        let mut mapped_addr: ExtAddr = 0xFFFF_FFFF.into();
+
+        if self.mapper.map_write_chr(addr, &mut mapped_addr) {
+            // Mapper has produced an offset into cartridge bank memory
+            self.chr_mem[mapped_addr.as_usize()] = v;
+        }
     }
 }
 
