@@ -182,7 +182,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr = registers.get_sp().as_lo_addr() | 0x0100.into();
+    let addr = registers.sp().as_lo_addr() | 0x0100.into();
     bus.write(addr, v);
     registers.dec_sp();
 }
@@ -192,7 +192,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let pc = registers.get_pc();
+    let pc = registers.pc();
     push(registers, bus, pc.hi());
     push(registers, bus, pc.lo());
 }
@@ -202,7 +202,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let status = registers.get_status();
+    let status = registers.status();
     push(registers, bus, status);
 }
 
@@ -212,7 +212,7 @@ where
     U: CpuBus,
 {
     registers.inc_sp();
-    let addr = registers.get_sp().as_lo_addr() | 0x0100.into();
+    let addr = registers.sp().as_lo_addr() | 0x0100.into();
     bus.read(addr)
 }
 
@@ -308,8 +308,8 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
-    let carry = registers.get_carry();
+    let acc = registers.a();
+    let carry = registers.carry();
 
     let res = fetched.as_lo_word() + acc.as_lo_word() + carry.as_word();
     let overflow = !((acc ^ fetched) & 0x80.into() != 0x00.into())
@@ -348,7 +348,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
+    let acc = registers.a();
     let res = fetched & acc;
 
     registers
@@ -404,11 +404,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if !registers.get_carry() {
+    if !registers.carry() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -432,11 +432,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if registers.get_carry() {
+    if registers.carry() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -460,11 +460,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if registers.get_zero() {
+    if registers.zero() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -487,7 +487,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
+    let acc = registers.a();
 
     registers
         .update_negative_by(fetched)
@@ -509,11 +509,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if registers.get_negative() {
+    if registers.negative() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -535,11 +535,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if !registers.get_zero() {
+    if !registers.zero() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -563,11 +563,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if !registers.get_negative() {
+    if !registers.negative() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -620,11 +620,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if !registers.get_overflow() {
+    if !registers.overflow() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -648,11 +648,11 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    if registers.get_overflow() {
+    if registers.overflow() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
 
-        if !is_same_page(addr, registers.get_pc()) {
+        if !is_same_page(addr, registers.pc()) {
             additional_cycles += 1;
         }
 
@@ -742,7 +742,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let reg = registers.get_a();
+    let reg = registers.a();
     let res = reg.as_lo_word() - fetched.as_lo_word();
 
     registers
@@ -767,7 +767,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let reg = registers.get_x();
+    let reg = registers.x();
     let res = reg.as_lo_word() - fetched.as_lo_word();
 
     registers
@@ -792,7 +792,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let reg = registers.get_y();
+    let reg = registers.y();
     let res = reg.as_lo_word() - fetched.as_lo_word();
 
     registers
@@ -838,7 +838,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_x().dec();
+    let res = registers.x().dec();
 
     registers
         .set_x(res)
@@ -861,7 +861,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_y().dec();
+    let res = registers.y().dec();
 
     registers
         .set_y(res)
@@ -885,7 +885,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
+    let acc = registers.a();
     let res = acc ^ fetched;
 
     registers
@@ -931,7 +931,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_x().inc();
+    let res = registers.x().inc();
 
     registers
         .set_x(res)
@@ -951,7 +951,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_y().inc();
+    let res = registers.y().inc();
 
     registers
         .set_y(res)
@@ -1126,7 +1126,7 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
+    let acc = registers.a();
     let res = acc | fetched;
 
     registers
@@ -1149,7 +1149,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    push(registers, bus, registers.get_a());
+    push(registers, bus, registers.a());
     (0, false)
 }
 
@@ -1225,7 +1225,7 @@ where
     U: CpuBus,
 {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
-    let res = (fetched.as_lo_word() << 1) | registers.get_carry().as_word();
+    let res = (fetched.as_lo_word() << 1) | registers.carry().as_word();
 
     registers
         .set_carry(res.hi() != 0x00.into())
@@ -1255,7 +1255,7 @@ where
     U: CpuBus,
 {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
-    let res = (fetched.as_lo_word() >> 1) | (registers.get_carry().as_word() << 7);
+    let res = (fetched.as_lo_word() >> 1) | (registers.carry().as_word() << 7);
 
     registers
         .set_carry(res.hi() != 0x00.into())
@@ -1344,10 +1344,10 @@ where
     U: CpuBus,
 {
     let fetched = unwrap_operand(bus, operand);
-    let acc = registers.get_a();
+    let acc = registers.a();
     // We can invert the bottom 8 bits with bitwise xor
     let val = fetched ^ 0xFF.into();
-    let res = acc.as_lo_word() + val.as_lo_word() + registers.get_carry().as_word();
+    let res = acc.as_lo_word() + val.as_lo_word() + registers.carry().as_word();
     // Magic....
     let overflow =
         (res ^ acc.as_lo_word()) & (res ^ val.as_lo_word() & 0x0080.into()) != 0x0000.into();
@@ -1423,7 +1423,7 @@ where
     U: CpuBus,
 {
     let addr = operand.unwrap_addr();
-    let res = registers.get_a();
+    let res = registers.a();
     bus.write(addr, res);
 
     (0, false)
@@ -1442,7 +1442,7 @@ where
     U: CpuBus,
 {
     let addr = operand.unwrap_addr();
-    let res = registers.get_x();
+    let res = registers.x();
     bus.write(addr, res);
 
     (0, false)
@@ -1461,7 +1461,7 @@ where
     U: CpuBus,
 {
     let addr = operand.unwrap_addr();
-    let res = registers.get_y();
+    let res = registers.y();
     bus.write(addr, res);
 
     (0, false)
@@ -1480,7 +1480,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_a();
+    let res = registers.a();
 
     registers
         .set_x(res)
@@ -1503,7 +1503,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_a();
+    let res = registers.a();
 
     registers
         .set_y(res)
@@ -1526,7 +1526,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_sp();
+    let res = registers.sp();
 
     registers
         .set_x(res)
@@ -1549,7 +1549,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_x();
+    let res = registers.x();
 
     registers
         .set_a(res)
@@ -1571,7 +1571,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_x();
+    let res = registers.x();
 
     registers.set_sp(res);
 
@@ -1591,7 +1591,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let res = registers.get_y();
+    let res = registers.y();
 
     registers
         .set_a(res)

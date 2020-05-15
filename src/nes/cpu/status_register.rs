@@ -1,86 +1,58 @@
 use crate::prelude::*;
+use bitfield::*;
 
-#[derive(Debug, Default, Clone, Copy)]
-pub struct StatusRegister {
-    pub carry:        bool, // 00000001
-    pub zero:         bool, // 00000010
-    pub interrupt:    bool, // 00000100
-    pub decimal_mode: bool, // 00001000
-    pub break_mode:   bool, // 00010000
-    pub reserved:     bool, // 00100000
-    pub overflow:     bool, // 01000000
-    pub negative:     bool, // 10000000
+bitfield! {
+    #[derive(Default, Clone, Copy)]
+    pub struct StatusRegister(u8);
+    impl Debug;
+    // =============================== Bit position: 7654 3210
+    pub bool, carry,        set_carry:         0; // 0000_0001
+    pub bool, zero,         set_zero:          1; // 0000_0010
+    pub bool, interrupt,    set_interrupt:     2; // 0000_0100
+    pub bool, decimal_mode, set_decimal_mode:  3; // 0000_1000
+    pub bool, break_mode,   set_break_mode:    4; // 0001_0000
+    pub bool, reserved,     set_reserved:      5; // 0010_0000
+    pub bool, overflow,     set_overflow:      6; // 0100_0000
+    pub bool, negative,     set_negative:      7; // 1000_0000
 }
 
 impl StatusRegister {
-    pub fn new() -> StatusRegister {
-        StatusRegister {
-            carry:        false,
-            zero:         false,
-            interrupt:    false,
-            decimal_mode: false,
-            break_mode:   false,
-            reserved:     true,
-            overflow:     false,
-            negative:     false,
-        }
+    pub fn new() -> Self {
+        let mut s = Self(0);
+        s.set_reserved(true);
+        s
     }
 }
 
 impl From<u8> for StatusRegister {
     fn from(v: u8) -> Self {
-        StatusRegister {
-            carry:        v & 0b00000001 == 0b00000001,
-            zero:         v & 0b00000010 == 0b00000010,
-            interrupt:    v & 0b00000100 == 0b00000100,
-            decimal_mode: v & 0b00001000 == 0b00001000,
-            break_mode:   v & 0b00010000 == 0b00010000,
-            reserved:     v & 0b00100000 == 0b00100000,
-            overflow:     v & 0b01000000 == 0b01000000,
-            negative:     v & 0b10000000 == 0b10000000,
-        }
+        Self(v)
     }
 }
 
 impl From<StatusRegister> for u8 {
     fn from(v: StatusRegister) -> Self {
-        (v.carry as u8) << 0
-            | (v.zero as u8) << 1
-            | (v.interrupt as u8) << 2
-            | (v.decimal_mode as u8) << 3
-            | (v.break_mode as u8) << 4
-            | (v.reserved as u8) << 5
-            | (v.overflow as u8) << 6
-            | (v.negative as u8) << 7
+        v.0
     }
 }
 
 impl From<Byte> for StatusRegister {
     fn from(v: Byte) -> Self {
-        StatusRegister {
-            carry:        v & 0b00000001.into() == 0b00000001.into(),
-            zero:         v & 0b00000010.into() == 0b00000010.into(),
-            interrupt:    v & 0b00000100.into() == 0b00000100.into(),
-            decimal_mode: v & 0b00001000.into() == 0b00001000.into(),
-            break_mode:   v & 0b00010000.into() == 0b00010000.into(),
-            reserved:     v & 0b00100000.into() == 0b00100000.into(),
-            overflow:     v & 0b01000000.into() == 0b01000000.into(),
-            negative:     v & 0b10000000.into() == 0b10000000.into(),
-        }
+        let mut s = Self(0);
+        s.set_carry(v.inspect_bit(0));
+        s.set_zero(v.inspect_bit(1));
+        s.set_interrupt(v.inspect_bit(2));
+        s.set_decimal_mode(v.inspect_bit(3));
+        s.set_break_mode(v.inspect_bit(4));
+        s.set_reserved(v.inspect_bit(5));
+        s.set_overflow(v.inspect_bit(6));
+        s.set_negative(v.inspect_bit(7));
+        s
     }
 }
 
 impl From<StatusRegister> for Byte {
     fn from(v: StatusRegister) -> Self {
-        Byte(
-            (v.carry as u8) << 0
-                | (v.zero as u8) << 1
-                | (v.interrupt as u8) << 2
-                | (v.decimal_mode as u8) << 3
-                | (v.break_mode as u8) << 4
-                | (v.reserved as u8) << 5
-                | (v.overflow as u8) << 6
-                | (v.negative as u8) << 7,
-        )
+        Byte(v.0)
     }
 }

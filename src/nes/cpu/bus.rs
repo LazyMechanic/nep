@@ -21,11 +21,7 @@ impl<'a> Bus<'a> {
 impl<'a> CpuBus for Bus<'a> {
     fn read(&mut self, addr: Addr) -> Byte {
         match addr {
-            // Read RAM
-            //   0b1000'1111'1111'1111 {0x8FFF}
-            // & 0b0111'1111'1111'1111 {0x7FFF}
-            // = 0b0000'1111'1111'1111 {0x0FFF}
-            Addr(0x0000..=0x1FFF) => self.ram.read(addr & 0x07FF.into()),
+            Addr(0x0000..=0x1FFF) => self.ram.read(addr),
             Addr(0x2000..=0x3FFF) => unimplemented!(), // TODO: self.ppu.read(addr & 0x0007.into()),
             Addr(0x4016) => unimplemented!(),          // TODO: self.joy.read(),
             Addr(0x4017) => Byte(0),                   // TODO: 2 player
@@ -55,10 +51,7 @@ impl<'a> CpuBus for Bus<'a> {
 
     fn write(&mut self, addr: Addr, v: Byte) {
         match addr {
-            //   0b1000'1111'1111'1111 {0x8FFF}
-            // & 0b0111'1111'1111'1111 {0x7FFF}
-            // = 0b0000'1111'1111'1111 {0x0FFF}
-            Addr(0x0000..=0x1FFF) => self.ram.write(addr & 0x07FF.into(), v),
+            Addr(0x0000..=0x1FFF) => self.ram.write(addr, v),
             Addr(0x4014) => unimplemented!(), // TODO: self.dma.write(v),
             Addr(0x4016) => unimplemented!(), // TODO: self.joy.write(v),
             Addr(0x4000..=0x4017) => unimplemented!(), // TODO: self.apu.write(addr - 0x4000.into(), v),

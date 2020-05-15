@@ -1,23 +1,22 @@
 use super::bus::CpuBus;
 use super::status_register::StatusRegister;
 use crate::prelude::*;
-use sdl2::render::TextureAccess::Static;
 
 pub trait CpuRegisters {
-    fn get_a(&self) -> Byte;
-    fn get_x(&self) -> Byte;
-    fn get_y(&self) -> Byte;
-    fn get_sp(&self) -> Byte;
-    fn get_pc(&self) -> Addr;
-    fn get_carry(&self) -> bool;
-    fn get_zero(&self) -> bool;
-    fn get_interrupt(&self) -> bool;
-    fn get_decimal_mode(&self) -> bool;
-    fn get_break_mode(&self) -> bool;
-    fn get_reserved(&self) -> bool;
-    fn get_overflow(&self) -> bool;
-    fn get_negative(&self) -> bool;
-    fn get_status(&self) -> Byte;
+    fn a(&self) -> Byte;
+    fn x(&self) -> Byte;
+    fn y(&self) -> Byte;
+    fn sp(&self) -> Byte;
+    fn pc(&self) -> Addr;
+    fn carry(&self) -> bool;
+    fn zero(&self) -> bool;
+    fn interrupt(&self) -> bool;
+    fn decimal_mode(&self) -> bool;
+    fn break_mode(&self) -> bool;
+    fn reserved(&self) -> bool;
+    fn overflow(&self) -> bool;
+    fn negative(&self) -> bool;
+    fn status(&self) -> Byte;
 
     fn set_a(&mut self, v: Byte) -> &mut Self;
     fn set_x(&mut self, v: Byte) -> &mut Self;
@@ -84,59 +83,59 @@ impl Registers {
 }
 
 impl CpuRegisters for Registers {
-    fn get_a(&self) -> Byte {
+    fn a(&self) -> Byte {
         self.a
     }
 
-    fn get_x(&self) -> Byte {
+    fn x(&self) -> Byte {
         self.x
     }
 
-    fn get_y(&self) -> Byte {
+    fn y(&self) -> Byte {
         self.y
     }
 
-    fn get_sp(&self) -> Byte {
+    fn sp(&self) -> Byte {
         self.sp
     }
 
-    fn get_pc(&self) -> Addr {
+    fn pc(&self) -> Addr {
         self.pc
     }
 
-    fn get_carry(&self) -> bool {
-        self.status.carry
+    fn carry(&self) -> bool {
+        self.status.carry()
     }
 
-    fn get_zero(&self) -> bool {
-        self.status.zero
+    fn zero(&self) -> bool {
+        self.status.zero()
     }
 
-    fn get_interrupt(&self) -> bool {
-        self.status.interrupt
+    fn interrupt(&self) -> bool {
+        self.status.interrupt()
     }
 
-    fn get_decimal_mode(&self) -> bool {
-        self.status.decimal_mode
+    fn decimal_mode(&self) -> bool {
+        self.status.decimal_mode()
     }
 
-    fn get_break_mode(&self) -> bool {
-        self.status.break_mode
+    fn break_mode(&self) -> bool {
+        self.status.break_mode()
     }
 
-    fn get_reserved(&self) -> bool {
-        self.status.reserved
+    fn reserved(&self) -> bool {
+        self.status.reserved()
     }
 
-    fn get_overflow(&self) -> bool {
-        self.status.overflow
+    fn overflow(&self) -> bool {
+        self.status.overflow()
     }
 
-    fn get_negative(&self) -> bool {
-        self.status.negative
+    fn negative(&self) -> bool {
+        self.status.negative()
     }
 
-    fn get_status(&self) -> Byte {
+    fn status(&self) -> Byte {
         Byte(self.status.clone().into())
     }
 
@@ -166,42 +165,42 @@ impl CpuRegisters for Registers {
     }
 
     fn set_carry(&mut self, v: bool) -> &mut Self {
-        self.status.carry = v;
+        self.status.set_carry(v);
         self
     }
 
     fn set_zero(&mut self, v: bool) -> &mut Self {
-        self.status.zero = v;
+        self.status.set_zero(v);
         self
     }
 
     fn set_interrupt(&mut self, v: bool) -> &mut Self {
-        self.status.interrupt = v;
+        self.status.set_interrupt(v);
         self
     }
 
     fn set_decimal_mode(&mut self, v: bool) -> &mut Self {
-        self.status.decimal_mode = v;
+        self.status.set_decimal_mode(v);
         self
     }
 
     fn set_break_mode(&mut self, v: bool) -> &mut Self {
-        self.status.break_mode = v;
+        self.status.set_break_mode(v);
         self
     }
 
     fn set_reserved(&mut self, v: bool) -> &mut Self {
-        self.status.reserved = v;
+        self.status.set_reserved(v);
         self
     }
 
     fn set_overflow(&mut self, v: bool) -> &mut Self {
-        self.status.overflow = v;
+        self.status.set_overflow(v);
         self
     }
 
     fn set_negative(&mut self, v: bool) -> &mut Self {
-        self.status.negative = v;
+        self.status.set_negative(v);
         self
     }
 

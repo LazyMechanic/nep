@@ -6,7 +6,7 @@ use super::registers::{CpuRegisters, Registers};
 
 #[derive(Default)]
 pub struct Cpu {
-    reg:    Registers,
+    regs:   Registers,
     cycles: u8,
 }
 
@@ -21,6 +21,7 @@ impl Cpu {
     where
         T: CpuBus,
     {
+        self.regs.reset(bus);
     }
 
     pub fn irq<T>(&mut self, bus: &mut T)
@@ -50,10 +51,10 @@ impl Cpu {
         // the instruction. When it reaches 0, the instruction is complete, and
         // the next one is ready to be executed.
         if self.cycles == 0 {
-            let code = addressing::fetch_instruction_code(&mut self.reg, bus);
+            let code = addressing::fetch_instruction_code(&mut self.regs, bus);
 
             // Always set the unused status flag bit to 1
-            self.reg.set_reserved(true);
+            self.regs.set_reserved(true);
 
             let opcodes = &opcode::OPCODES;
             let opcode = &opcodes[code.0 as usize];
@@ -61,10 +62,10 @@ impl Cpu {
             // Get Starting number of cycles
             self.cycles = opcode.cycles;
 
-            let (operand, addr_need_add) = addressing::fetch_operand(&opcode, &mut self.reg, bus);
+            let (operand, addr_need_add) = addressing::fetch_operand(&opcode, &mut self.regs, bus);
 
             let (additional_cycle, intr_need_add) =
-                instruction::exec_instruction(&opcode, &mut self.reg, bus, operand);
+                instruction::exec_instruction(&opcode, &mut self.regs, bus, operand);
 
             self.cycles += additional_cycle;
 
@@ -75,7 +76,7 @@ impl Cpu {
             }
 
             // Always set the unused status flag bit to 1
-            self.reg.set_reserved(true);
+            self.regs.set_reserved(true);
         }
 
         self.cycles -= 1;

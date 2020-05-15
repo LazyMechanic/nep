@@ -67,7 +67,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let b = bus.read(registers.get_pc());
+    let b = bus.read(registers.pc());
     registers.inc_pc();
     b
 }
@@ -106,7 +106,7 @@ where
     U: CpuBus,
 {
     let word = fetch_word(registers, bus);
-    let addr = Addr::from(word.clone()) + registers.get_x().as_lo_addr();
+    let addr = Addr::from(word.clone()) + registers.x().as_lo_addr();
 
     if word.hi() != addr.hi() {
         (Operand::Addr(addr), true)
@@ -121,7 +121,7 @@ where
     U: CpuBus,
 {
     let word = fetch_word(registers, bus);
-    let addr = Addr::from(word.clone()) + registers.get_y().as_lo_addr();
+    let addr = Addr::from(word.clone()) + registers.y().as_lo_addr();
 
     if word.hi() != addr.hi() {
         (Operand::Addr(addr), true)
@@ -170,7 +170,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let mut base = fetch_byte(registers, bus).as_lo_addr() + registers.get_x().as_lo_addr();
+    let mut base = fetch_byte(registers, bus).as_lo_addr() + registers.x().as_lo_addr();
 
     let lo = bus.read(base);
     let hi = bus.read(base.inc());
@@ -190,7 +190,7 @@ where
     let lo = bus.read(base);
     let hi = bus.read(base.inc());
 
-    let addr = Addr::from_bytes(lo, hi) + registers.get_y().as_lo_addr();
+    let addr = Addr::from_bytes(lo, hi) + registers.y().as_lo_addr();
 
     if addr.hi() != hi {
         (Operand::Addr(addr), true)
@@ -226,7 +226,7 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr = fetch_byte(registers, bus).as_lo_addr() + registers.get_x().as_lo_addr();
+    let addr = fetch_byte(registers, bus).as_lo_addr() + registers.x().as_lo_addr();
     (Operand::Addr(addr), false)
 }
 
@@ -235,6 +235,6 @@ where
     T: CpuRegisters,
     U: CpuBus,
 {
-    let addr = fetch_byte(registers, bus).as_lo_addr() + registers.get_y().as_lo_addr();
+    let addr = fetch_byte(registers, bus).as_lo_addr() + registers.y().as_lo_addr();
     (Operand::Addr(addr), false)
 }

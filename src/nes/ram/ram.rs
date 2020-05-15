@@ -13,11 +13,21 @@ impl Ram {
     }
 
     pub fn read(&self, addr: Addr) -> Byte {
-        self.mem[addr.as_usize()]
+        // Read RAM
+        //   0b‭0001'1010'0001'0010‬ {0x1A12}
+        // & 0b0000'0111'1111'1111 {0x07FF}
+        // = 0b‭0000'0010'0001'0010‬ {0x0212}
+        let trunc_addr = addr & 0x07FF.into();
+        self.mem[trunc_addr.as_usize()]
     }
 
     pub fn write(&mut self, addr: Addr, v: Byte) {
-        self.mem[addr.as_usize()] = v;
+        // Write into RAM
+        //   0b‭0001'1010'0001'0010‬ {0x1A12}
+        // & 0b0000'0111'1111'1111 {0x07FF}
+        // = 0b‭0000'0010'0001'0010‬ {0x0212}
+        let trunc_addr = addr & 0x07FF.into();
+        self.mem[trunc_addr.as_usize()] = v;
     }
 
     pub fn size(&self) -> usize {
