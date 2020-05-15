@@ -16,6 +16,12 @@ bitfield! {
     pub bool, enhance_blue,           set_enhance_blue:           7; // 0b*000_0000
 }
 
+impl PpuMask {
+    pub fn new() -> Self {
+        Self(0)
+    }
+}
+
 impl From<u8> for PpuMask {
     fn from(v: u8) -> Self {
         Self(v)

@@ -16,6 +16,12 @@ bitfield! {
     pub bool, enable_nmi,         set_enable_nmi:         7; // 0b*000_0000
 }
 
+impl PpuCtrl {
+    pub fn new() -> Self {
+        Self(0)
+    }
+}
+
 impl From<u8> for PpuCtrl {
     fn from(v: u8) -> Self {
         Self(v)

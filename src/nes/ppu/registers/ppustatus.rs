@@ -12,6 +12,12 @@ bitfield! {
     pub bool, sprite_overflow, set_sprite_overflow: 7; // 0b*000_0000
 }
 
+impl PpuStatus {
+    pub fn new() -> Self {
+        Self(0)
+    }
+}
+
 impl From<u8> for PpuStatus {
     fn from(v: u8) -> Self {
         Self(v)
