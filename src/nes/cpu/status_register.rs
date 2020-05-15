@@ -38,16 +38,7 @@ impl From<StatusRegister> for u8 {
 
 impl From<Byte> for StatusRegister {
     fn from(v: Byte) -> Self {
-        let mut s = Self(0);
-        s.set_carry(v.inspect_bit(0));
-        s.set_zero(v.inspect_bit(1));
-        s.set_interrupt(v.inspect_bit(2));
-        s.set_decimal_mode(v.inspect_bit(3));
-        s.set_break_mode(v.inspect_bit(4));
-        s.set_reserved(v.inspect_bit(5));
-        s.set_overflow(v.inspect_bit(6));
-        s.set_negative(v.inspect_bit(7));
-        s
+        Self(v.into())
     }
 }
 
