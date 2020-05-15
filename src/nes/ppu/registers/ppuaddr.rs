@@ -20,6 +20,18 @@ impl PpuAddr {
         }
     }
 
+    pub fn set_part(&mut self, part: Part) {
+        self.part = part;
+    }
+
+    pub fn set_part_hi(&mut self) {
+        self.set_part(Part::Hi);
+    }
+
+    pub fn set_part_lo(&mut self) {
+        self.set_part(Part::Lo);
+    }
+
     pub fn addr(&self) -> Addr {
         self.addr
     }

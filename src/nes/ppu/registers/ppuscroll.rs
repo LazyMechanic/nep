@@ -22,16 +22,16 @@ impl PpuScroll {
         }
     }
 
-    pub fn set_cur_axis(&mut self, axis: Axis) {
+    pub fn set_axis(&mut self, axis: Axis) {
         self.axis = axis;
     }
 
-    pub fn set_cur_axis_x(&mut self) {
-        self.set_cur_axis(Axis::X);
+    pub fn set_axis_x(&mut self) {
+        self.set_axis(Axis::X);
     }
 
-    pub fn set_cur_axis_y(&mut self) {
-        self.set_cur_axis(Axis::Y);
+    pub fn set_axis_y(&mut self) {
+        self.set_axis(Axis::Y);
     }
 
     pub fn x(&self) -> Byte {

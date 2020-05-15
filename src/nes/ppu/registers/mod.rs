@@ -1,3 +1,4 @@
+pub mod oam;
 pub mod ppuaddr;
 pub mod ppuctrl;
 pub mod ppumask;
