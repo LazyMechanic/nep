@@ -4,16 +4,13 @@ use super::instruction;
 use super::opcode::{self, OpCode};
 use super::registers::{CpuRegisters, Registers};
 
+#[derive(Default)]
 pub struct Cpu {
     reg:    Registers,
     cycles: u8,
 }
 
 impl Cpu {
-    pub fn new(reg: Registers) -> Self {
-        Self { reg, cycles: 0 }
-    }
-
     // Forces the 6502 into a known state. This is hard-wired inside the CPU. The
     // registers are set to 0x00, the status register is cleared except for unused
     // bit which remains at 1. An absolute address is read from location 0xFFFC

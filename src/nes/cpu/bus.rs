@@ -30,7 +30,8 @@ impl<'a> CpuBus for Bus<'a> {
             Addr(0x4016) => unimplemented!(),          // TODO: self.joy.read(),
             Addr(0x4017) => Byte(0),                   // TODO: 2 player
             Addr(0x4000..=0x4017) => unimplemented!(), // TODO: self.apu.read(addr - 0x4000.into()),
-            Addr(0x6000..=0xFFFF) => self.cart.read(addr),
+            Addr(0x4018..=0x401F) => Byte(0), // Normally disabled. Enabled if CPU in test mode
+            Addr(0x4020..=0xFFFF) => self.cart.read(addr),
             // // Read ROM
             // //   0b1000'1001'1001'0011 {0x8993}
             // // - 0b1000'0000'0000'0000 {0x8000}
@@ -48,7 +49,7 @@ impl<'a> CpuBus for Bus<'a> {
             // // - 0b1000'0000'0000'0000 {0x8000}
             // // = 0b0100'1001'1001'0011 {0x4993}
             // Addr(0xC000..=0xFFFF) => self.rom.read(addr - 0x8000.into()),
-            _ => panic!("[CPUBUS] Read from an illegal address (0x{:X})", addr),
+            _ => panic!("[CPUBUS] Read from an illegal address ({:#06X})", addr),
         }
     }
 
@@ -61,8 +62,9 @@ impl<'a> CpuBus for Bus<'a> {
             Addr(0x4014) => unimplemented!(), // TODO: self.dma.write(v),
             Addr(0x4016) => unimplemented!(), // TODO: self.joy.write(v),
             Addr(0x4000..=0x4017) => unimplemented!(), // TODO: self.apu.write(addr - 0x4000.into(), v),
-            Addr(0x4018..=0xFFFF) => self.cart.write(addr, v),
-            _ => panic!("[CPUBUS] Write to an illegal address (0x{:X})", addr),
+            Addr(0x4018..=0x401F) => { /*do nothing*/ } // Normally disabled. Enabled if CPU in test mode
+            Addr(0x4020..=0xFFFF) => self.cart.write(addr, v),
+            _ => panic!("[CPUBUS] Write to an illegal address ({:#06X})", addr),
         }
     }
 }

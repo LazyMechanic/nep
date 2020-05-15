@@ -10,6 +10,7 @@ use std::str;
 use std::io::prelude::*;
 use std::io::SeekFrom;
 
+#[derive(Debug, Clone, Copy)]
 pub enum Mirror {
     Horizontal,
     Vertical,
@@ -295,6 +296,14 @@ impl Cartridge {
             // Mapper has produced an offset into cartridge bank memory
             self.chr_mem[mapped_addr.as_usize()] = v;
         }
+    }
+
+    pub fn mirror(&self) -> Mirror {
+        let mapper_mirror = self.mapper.mirror();
+        return match mapper_mirror {
+            Mirror::Hardware => self.mirror,
+            _ => mapper_mirror,
+        };
     }
 }
 

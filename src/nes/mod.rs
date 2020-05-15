@@ -1,7 +1,6 @@
 pub mod cartridge;
 pub mod clock;
 pub mod cpu;
-pub mod ext;
 pub mod prelude;
 pub mod ram;
 pub mod types;
@@ -18,15 +17,18 @@ where
 {
     let mut cart = cartridge::Cartridge::from_file(file_path)?;
     let mut ram = ram::Ram::with_size(RAM_SIZE);
+    let mut cpu = cpu::Cpu::default();
 
     let mut bus = cpu::bus::Bus::new(&mut ram, &mut cart);
+
+    cpu.reset(&mut bus);
 
     let mut clock = clock::Clock::default();
     loop {
         clock.update();
 
         if clock.need_step_cpu() {
-            // TODO: cpu.step(bus);
+            // TODO: cpu.step(&mut bus);
         }
 
         if clock.need_step_ppu() {

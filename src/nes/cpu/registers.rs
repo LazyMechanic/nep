@@ -58,7 +58,7 @@ pub struct Registers {
 }
 
 impl Registers {
-    pub fn new<T>(bus: &mut T) -> Self
+    pub fn reset<T>(&mut self, bus: &mut T)
     where
         T: CpuBus,
     {
@@ -74,14 +74,12 @@ impl Registers {
             Addr::from_bytes(lo, hi)
         };
 
-        Self {
-            a,
-            x,
-            y,
-            sp,
-            pc,
-            status,
-        }
+        self.a = a;
+        self.x = x;
+        self.y = y;
+        self.sp = sp;
+        self.status = status;
+        self.pc = pc;
     }
 }
 

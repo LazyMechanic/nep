@@ -45,6 +45,13 @@ macro_rules! math_type {
             }
         }
 
+        impl std::fmt::LowerHex for $name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                let val = self.0;
+                std::fmt::LowerHex::fmt(&val, f)
+            }
+        }
+
         impl $name {
             pub fn inc(&mut self) -> Self {
                 self.0.overflowing_add(1);
