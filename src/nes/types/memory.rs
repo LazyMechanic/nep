@@ -82,6 +82,14 @@ impl Word {
         }
     }
 
+    pub fn set_lo(&mut self, v: Byte) {
+        *self = (*self & Word::with_hi_set()) | v.as_lo_word();
+    }
+
+    pub fn set_hi(&mut self, v: Byte) {
+        *self = (*self & Word::with_lo_set()) | v.as_hi_word();
+    }
+
     pub fn from_bytes(lo: Byte, hi: Byte) -> Word {
         let word: Word = lo.as_lo_word() | hi.as_hi_word();
         word
@@ -125,6 +133,14 @@ impl Addr {
     pub fn as_hi_ext_addr(&self) -> ExtAddr {
         let v: ExtAddr = (0xFFFF0000 & ((self.0 as u32) << 16)).into();
         v
+    }
+
+    pub fn set_lo(&mut self, v: Byte) {
+        *self = (*self & Addr::with_hi_set()) | v.as_lo_addr();
+    }
+
+    pub fn set_hi(&mut self, v: Byte) {
+        *self = (*self & Addr::with_lo_set()) | v.as_hi_addr();
     }
 
     pub fn as_usize(&self) -> usize {

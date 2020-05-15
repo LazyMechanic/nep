@@ -1,9 +1,18 @@
-use super::{PpuCtrl, PpuMask, PpuStatus};
+use super::{ppuaddr::PpuAddr, ppuctrl::PpuCtrl, ppumask::PpuMask, ppustatus::PpuStatus};
 use crate::prelude::*;
 
-struct Registers {
+pub struct Registers {
     pub ppu_ctrl:   PpuCtrl,
     pub ppu_mask:   PpuMask,
     pub ppu_status: PpuStatus,
-    pub oam_addr:   Addr,
+}
+
+impl Registers {
+    pub fn new() -> Self {
+        Self {
+            ppu_ctrl:   PpuCtrl::new(),
+            ppu_mask:   PpuMask::new(),
+            ppu_status: PpuStatus::new(),
+        }
+    }
 }
