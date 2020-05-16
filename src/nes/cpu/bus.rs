@@ -7,11 +7,6 @@ use crate::ram::Ram;
 use std::cell::RefCell;
 use std::rc::Rc;
 
-pub trait CpuBus {
-    fn read(&mut self, addr: Addr) -> Byte;
-    fn write(&mut self, addr: Addr, v: Byte);
-}
-
 pub struct Bus {
     cart: Rc<RefCell<Cartridge>>,
     ram:  Rc<RefCell<InternalRam>>,
@@ -26,10 +21,8 @@ impl Bus {
     ) -> Self {
         Self { cart, ram, ppu }
     }
-}
 
-impl CpuBus for Bus {
-    fn read(&mut self, addr: Addr) -> Byte {
+    pub fn read(&mut self, addr: Addr) -> Byte {
         match addr {
             Addr(0x0000..=0x1FFF) => self.ram.borrow_mut().read(addr),
             Addr(0x2000..=0x3FFF) => self.ppu.borrow_mut().read(addr),
@@ -59,7 +52,7 @@ impl CpuBus for Bus {
         }
     }
 
-    fn write(&mut self, addr: Addr, v: Byte) {
+    pub fn write(&mut self, addr: Addr, v: Byte) {
         match addr {
             Addr(0x0000..=0x1FFF) => self.ram.borrow_mut().write(addr, v),
             Addr(0x2000..=0x3FFF) => self.ppu.borrow_mut().write(addr, v),

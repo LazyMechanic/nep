@@ -1,8 +1,8 @@
 use super::addressing::AddressingMode;
-use super::bus::CpuBus;
+use super::bus::Bus;
 use super::opcode::OpCode;
 use super::operand::Operand;
-use super::registers::CpuRegisters;
+use super::registers::Registers;
 use crate::prelude::*;
 
 pub type NumOfCycles = u8;
@@ -68,19 +68,15 @@ pub enum Instruction {
     TYA, // Transfer Y Register to Accumulator
 }
 
-pub fn exec_instruction<T, U>(
+pub fn exec_instruction(
     opcode: &OpCode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
 ) -> (
     /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
-)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) {
     let result = match opcode.inst {
         Instruction::XXX => xxx(&opcode.mode, registers, bus, operand),
         Instruction::ADC => adc(&opcode.mode, registers, bus, operand),
@@ -144,10 +140,7 @@ where
     result
 }
 
-fn unwrap_operand<T>(bus: &mut T, operand: Operand) -> Byte
-where
-    T: CpuBus,
-{
+fn unwrap_operand(bus: &mut Bus, operand: Operand) -> Byte {
     match operand {
         Operand::None => panic!("expected Operand::Byte || Operand::Addr, Operand::None handled"),
         Operand::Byte(v) => v,
@@ -155,10 +148,7 @@ where
     }
 }
 
-fn unwrap_operand_with_addr<T>(bus: &mut T, operand: Operand) -> (Byte, Addr)
-where
-    T: CpuBus,
-{
+fn unwrap_operand_with_addr(bus: &mut Bus, operand: Operand) -> (Byte, Addr) {
     match operand {
         Operand::None => panic!("expected Operand::Byte || Operand::Addr, Operand::None handled"),
         Operand::Byte(v) => (v, Addr(0)),
@@ -166,10 +156,7 @@ where
     }
 }
 
-fn jump_to<T>(registers: &mut T, addr: Addr)
-where
-    T: CpuRegisters,
-{
+fn jump_to(registers: &mut Registers, addr: Addr) {
     registers.set_pc(addr);
 }
 
@@ -177,61 +164,37 @@ fn is_same_page(left: Addr, right: Addr) -> bool {
     left.hi() == right.hi()
 }
 
-fn push<T, U>(registers: &mut T, bus: &mut U, v: Byte)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+fn push(registers: &mut Registers, bus: &mut Bus, v: Byte) {
     let addr = registers.sp().as_lo_addr() | 0x0100.into();
     bus.write(addr, v);
     registers.dec_sp();
 }
 
-fn push_pc<T, U>(registers: &mut T, bus: &mut U)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+fn push_pc(registers: &mut Registers, bus: &mut Bus) {
     let pc = registers.pc();
     push(registers, bus, pc.hi());
     push(registers, bus, pc.lo());
 }
 
-fn push_status<T, U>(registers: &mut T, bus: &mut U)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+fn push_status(registers: &mut Registers, bus: &mut Bus) {
     let status = registers.status();
     push(registers, bus, status);
 }
 
-fn pop<T, U>(registers: &mut T, bus: &mut U) -> Byte
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+fn pop(registers: &mut Registers, bus: &mut Bus) -> Byte {
     registers.inc_sp();
     let addr = registers.sp().as_lo_addr() | 0x0100.into();
     bus.read(addr)
 }
 
-fn pop_pc<T, U>(registers: &mut T, bus: &mut U)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+fn pop_pc(registers: &mut Registers, bus: &mut Bus) {
     let lo = pop(registers, bus);
     let hi = pop(registers, bus);
     let addr = Addr::from_bytes(lo, hi);
     registers.set_pc(addr);
 }
 
-fn pop_status<T, U>(registers: &mut T, bus: &mut U)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+fn pop_status(registers: &mut Registers, bus: &mut Bus) {
     let status = pop(registers, bus);
     registers.set_status(status);
 }
@@ -297,16 +260,12 @@ where
 //       Positive Number + Negative Number = Either Result -> Cannot Overflow
 //       Positive Number + Positive Number = Positive Result -> OK! No Overflow
 //       Negative Number + Negative Number = Negative Result -> OK! NO Overflow
-fn adc<T, U>(
+fn adc(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
     let carry = registers.carry();
@@ -337,16 +296,12 @@ where
 // Instruction: Bitwise Logic AND
 // Function:    A = A & M
 // Flags Out:   N, Z
-fn and<T, U>(
+fn and(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
     let res = fetched & acc;
@@ -362,16 +317,12 @@ where
 // Instruction: Arithmetic Shift Left
 // Function:    A = C <- (A << 1) <- 0
 // Flags Out:   N, Z, C
-fn asl<T, U>(
+fn asl(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
     let res = fetched.as_lo_word() << 1;
 
@@ -394,16 +345,12 @@ where
 
 // Instruction: Branch if Carry Clear
 // Function:    if(C == 0) pc = address
-fn bcc<T, U>(
+fn bcc(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if !registers.carry() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -422,16 +369,12 @@ where
 
 // Instruction: Branch if Carry Set
 // Function:    if(C == 1) pc = address
-fn bcs<T, U>(
+fn bcs(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if registers.carry() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -450,16 +393,12 @@ where
 
 // Instruction: Branch if Equal
 // Function:    if(Z == 1) pc = address
-fn beq<T, U>(
+fn beq(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if registers.zero() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -476,16 +415,12 @@ where
     }
 }
 
-fn bit<T, U>(
+fn bit(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
 
@@ -499,16 +434,12 @@ where
 
 // Instruction: Branch if Negative
 // Function:    if(N == 1) pc = address
-fn bmi<T, U>(
+fn bmi(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if registers.negative() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -525,16 +456,12 @@ where
     }
 }
 
-fn bne<T, U>(
+fn bne(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if !registers.zero() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -553,16 +480,12 @@ where
 
 // Instruction: Branch if Positive
 // Function:    if(N == 0) pc = address
-fn bpl<T, U>(
+fn bpl(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if !registers.negative() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -581,16 +504,12 @@ where
 
 // Instruction: Break
 // Function:    Program Sourced Interrupt
-fn brk<T, U>(
+fn brk(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     operand.unwrap_none();
 
     registers.inc_pc();
@@ -610,16 +529,12 @@ where
 
 // Instruction: Branch if Overflow Clear
 // Function:    if(V == 0) pc = address
-fn bvc<T, U>(
+fn bvc(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if !registers.overflow() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -638,16 +553,12 @@ where
 
 // Instruction: Branch if Overflow Set
 // Function:    if(V == 1) pc = address
-fn bvs<T, U>(
+fn bvs(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     if registers.overflow() {
         let mut additional_cycles: NumOfCycles = 1;
         let addr = operand.unwrap_addr();
@@ -666,64 +577,48 @@ where
 
 // Instruction: Clear Carry Flag
 // Function:    C = 0
-fn clc<T, U>(
+fn clc(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_carry(false);
     (0, false)
 }
 
 // Instruction: Clear Decimal Flag
 // Function:    D = 0
-fn cld<T, U>(
+fn cld(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_decimal_mode(false);
     (0, false)
 }
 
 // Instruction: Disable Interrupts / Clear Interrupt Flag
 // Function:    I = 0
-fn cli<T, U>(
+fn cli(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_interrupt(false);
     (0, false)
 }
 
 // Instruction: Clear Overflow Flag
 // Function:    V = 0
-fn clv<T, U>(
+fn clv(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_overflow(false);
     (0, false)
 }
@@ -731,16 +626,12 @@ where
 // Instruction: Compare Accumulator
 // Function:    C <- A >= M      Z <- (A - M) == 0
 // Flags Out:   N, C, Z
-fn cmp<T, U>(
+fn cmp(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let reg = registers.a();
     let res = reg.as_lo_word() - fetched.as_lo_word();
@@ -756,16 +647,12 @@ where
 // Instruction: Compare X Register
 // Function:    C <- X >= M      Z <- (X - M) == 0
 // Flags Out:   N, C, Z
-fn cpx<T, U>(
+fn cpx(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let reg = registers.x();
     let res = reg.as_lo_word() - fetched.as_lo_word();
@@ -781,16 +668,12 @@ where
 // Instruction: Compare Y Register
 // Function:    C <- Y >= M      Z <- (Y - M) == 0
 // Flags Out:   N, C, Z
-fn cpy<T, U>(
+fn cpy(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let reg = registers.y();
     let res = reg.as_lo_word() - fetched.as_lo_word();
@@ -806,16 +689,12 @@ where
 // Instruction: Decrement Value at Memory Location
 // Function:    M = M - 1
 // Flags Out:   N, Z
-fn dec<T, U>(
+fn dec(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let (mut fetched, addr) = unwrap_operand_with_addr(bus, operand);
     let res = fetched.dec();
 
@@ -828,16 +707,12 @@ where
 // Instruction: Decrement X Register
 // Function:    X = X - 1
 // Flags Out:   N, Z
-fn dex<T, U>(
+fn dex(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.x().dec();
 
     registers
@@ -851,16 +726,12 @@ where
 // Instruction: Decrement Y Register
 // Function:    Y = Y - 1
 // Flags Out:   N, Z
-fn dey<T, U>(
+fn dey(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.y().dec();
 
     registers
@@ -874,16 +745,12 @@ where
 // Instruction: Bitwise Logic XOR
 // Function:    A = A xor M
 // Flags Out:   N, Z
-fn eor<T, U>(
+fn eor(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
     let res = acc ^ fetched;
@@ -899,16 +766,12 @@ where
 // Instruction: Increment Value at Memory Location
 // Function:    M = M + 1
 // Flags Out:   N, Z
-fn inc<T, U>(
+fn inc(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let (mut fetched, addr) = unwrap_operand_with_addr(bus, operand);
     let res = fetched.inc();
 
@@ -921,16 +784,12 @@ where
 // Instruction: Increment X Register
 // Function:    X = X + 1
 // Flags Out:   N, Z
-fn inx<T, U>(
+fn inx(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.x().inc();
 
     registers
@@ -941,16 +800,12 @@ where
     (0, false)
 }
 
-fn iny<T, U>(
+fn iny(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.y().inc();
 
     registers
@@ -963,16 +818,12 @@ where
 
 // Instruction: Jump To Location
 // Function:    pc = address
-fn jmp<T, U>(
+fn jmp(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
     jump_to(registers, addr);
 
@@ -981,16 +832,12 @@ where
 
 // Instruction: Jump To Sub-Routine
 // Function:    Push current pc to stack, pc = address
-fn jsr<T, U>(
+fn jsr(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
 
     registers.dec_pc();
@@ -1003,16 +850,12 @@ where
 // Instruction: Load The Accumulator
 // Function:    A = M
 // Flags Out:   N, Z
-fn lda<T, U>(
+fn lda(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
 
     registers
@@ -1026,16 +869,12 @@ where
 // Instruction: Load The X Register
 // Function:    X = M
 // Flags Out:   N, Z
-fn ldx<T, U>(
+fn ldx(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
 
     registers
@@ -1049,16 +888,12 @@ where
 // Instruction: Load The Y Register
 // Function:    Y = M
 // Flags Out:   N, Z
-fn ldy<T, U>(
+fn ldy(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
 
     registers
@@ -1069,16 +904,12 @@ where
     (0, true)
 }
 
-fn lsr<T, U>(
+fn lsr(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
     let res = fetched >> 1;
 
@@ -1096,16 +927,12 @@ where
     (0, false)
 }
 
-fn nop<T, U>(
+fn nop(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     return match mode {
         AddressingMode::ABX => (0, true),
         _ => (0, false),
@@ -1115,16 +942,12 @@ where
 // Instruction: Bitwise Logic OR
 // Function:    A = A | M
 // Flags Out:   N, Z
-fn ora<T, U>(
+fn ora(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
     let res = acc | fetched;
@@ -1139,16 +962,12 @@ where
 
 // Instruction: Push Accumulator to Stack
 // Function:    A -> stack
-fn pha<T, U>(
+fn pha(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     push(registers, bus, registers.a());
     (0, false)
 }
@@ -1156,16 +975,12 @@ where
 // Instruction: Push Status Register to Stack
 // Function:    status -> stack
 // Note:        Break flag is set to 1 before push
-fn php<T, U>(
+fn php(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_break_mode(true).set_reserved(true);
 
     push_status(registers, bus);
@@ -1178,16 +993,12 @@ where
 // Instruction: Pop Accumulator off Stack
 // Function:    A <- stack
 // Flags Out:   N, Z
-fn pla<T, U>(
+fn pla(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = pop(registers, bus);
 
     registers
@@ -1200,30 +1011,22 @@ where
 
 // Instruction: Pop Status Register off Stack
 // Function:    Status <- stack
-fn plp<T, U>(
+fn plp(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     pop_status(registers, bus);
     (0, false)
 }
 
-fn rol<T, U>(
+fn rol(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
     let res = (fetched.as_lo_word() << 1) | registers.carry().as_word();
 
@@ -1244,16 +1047,12 @@ where
     (0, false)
 }
 
-fn ror<T, U>(
+fn ror(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
     let res = (fetched.as_lo_word() >> 1) | (registers.carry().as_word() << 7);
 
@@ -1274,16 +1073,12 @@ where
     (0, false)
 }
 
-fn rti<T, U>(
+fn rti(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     pop_status(registers, bus);
     registers.set_break_mode(false).set_reserved(false);
 
@@ -1292,16 +1087,12 @@ where
     (0, false)
 }
 
-fn rts<T, U>(
+fn rts(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     pop_pc(registers, bus);
     registers.inc_pc();
 
@@ -1333,16 +1124,12 @@ where
 // This means we already have the +1, so all we need to do is invert the bits
 // of M, the data(!) therfore we can simply add, exactly the same way we did
 // before.
-fn sbc<T, U>(
+fn sbc(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
     // We can invert the bottom 8 bits with bitwise xor
@@ -1364,64 +1151,48 @@ where
 
 // Instruction: Set Carry Flag
 // Function:    C = 1
-fn sec<T, U>(
+fn sec(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_carry(true);
     (0, false)
 }
 
 // Instruction: Set Decimal Flag
 // Function:    D = 1
-fn sed<T, U>(
+fn sed(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_decimal_mode(true);
     (0, false)
 }
 
 // Instruction: Set Interrupt Flag / Enable Interrupts
 // Function:    I = 1
-fn sei<T, U>(
+fn sei(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     registers.set_interrupt(true);
     (0, false)
 }
 
 // Instruction: Store Accumulator at Address
 // Function:    M = A
-fn sta<T, U>(
+fn sta(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
     let res = registers.a();
     bus.write(addr, res);
@@ -1431,16 +1202,12 @@ where
 
 // Instruction: Store X Register at Address
 // Function:    M = X
-fn stx<T, U>(
+fn stx(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
     let res = registers.x();
     bus.write(addr, res);
@@ -1450,16 +1217,12 @@ where
 
 // Instruction: Store Y Register at Address
 // Function:    M = Y
-fn sty<T, U>(
+fn sty(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
     let res = registers.y();
     bus.write(addr, res);
@@ -1470,16 +1233,12 @@ where
 // Instruction: Transfer Accumulator to X Register
 // Function:    X = A
 // Flags Out:   N, Z
-fn tax<T, U>(
+fn tax(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.a();
 
     registers
@@ -1493,16 +1252,12 @@ where
 // Instruction: Transfer Accumulator to Y Register
 // Function:    Y = A
 // Flags Out:   N, Z
-fn tay<T, U>(
+fn tay(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.a();
 
     registers
@@ -1516,16 +1271,12 @@ where
 // Instruction: Transfer Stack Pointer to X Register
 // Function:    X = stack pointer
 // Flags Out:   N, Z
-fn tsx<T, U>(
+fn tsx(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.sp();
 
     registers
@@ -1539,16 +1290,12 @@ where
 // Instruction: Transfer X Register to Accumulator
 // Function:    A = X
 // Flags Out:   N, Z
-fn txa<T, U>(
+fn txa(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.x();
 
     registers
@@ -1561,16 +1308,12 @@ where
 
 // Instruction: Transfer X Register to Stack Pointer
 // Function:    stack pointer = X
-fn txs<T, U>(
+fn txs(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.x();
 
     registers.set_sp(res);
@@ -1581,16 +1324,12 @@ where
 // Instruction: Transfer Y Register to Accumulator
 // Function:    A = Y
 // Flags Out:   N, Z
-fn tya<T, U>(
+fn tya(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     let res = registers.y();
 
     registers
@@ -1602,15 +1341,11 @@ where
 }
 
 // This function captures illegal opcodes
-fn xxx<T, U>(
+fn xxx(
     mode: &AddressingMode,
-    registers: &mut T,
-    bus: &mut U,
+    registers: &mut Registers,
+    bus: &mut Bus,
     operand: Operand,
-) -> (NumOfCycles, bool)
-where
-    T: CpuRegisters,
-    U: CpuBus,
-{
+) -> (NumOfCycles, bool) {
     (0, false)
 }

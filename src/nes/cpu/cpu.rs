@@ -1,8 +1,9 @@
 use super::addressing::{self, AddressingMode};
-use super::bus::{Bus, CpuBus};
+use super::bus::Bus;
 use super::instruction;
 use super::opcode::{self, OpCode};
-use super::registers::{CpuRegisters, Registers};
+use super::registers::Registers;
+use crate::prelude::*;
 
 #[derive(Default)]
 pub struct Cpu {
@@ -17,29 +18,86 @@ impl Cpu {
     // which contains a second address that the program counter is set to. This
     // allows the programmer to jump to a known and programmable location in the
     // memory to start executing from.
-    pub fn reset<T>(&mut self, bus: &mut T)
-    where
-        T: CpuBus,
-    {
+    pub fn reset(&mut self, bus: &mut Bus) {
         self.regs.reset(bus);
+        self.cycles = 8;
     }
 
-    pub fn irq<T>(&mut self, bus: &mut T)
-    where
-        T: CpuBus,
-    {
+    fn push(&mut self, bus: &mut Bus, v: Byte) {
+        let addr = self.regs.sp().as_lo_addr() | 0x0100.into();
+        bus.write(addr, v);
+        self.regs.dec_sp();
     }
 
-    pub fn nmi<T>(&mut self, bus: &mut T)
-    where
-        T: CpuBus,
-    {
+    // Interrupt requests are a complex operation and only happen if the
+    // "disable interrupt" flag is 0. IRQs can happen at any time, but
+    // you dont want them to be destructive to the operation of the running
+    // program. Therefore the current instruction is allowed to finish
+    // (which I facilitate by doing the whole thing when cycles == 0) and
+    // then the current program counter is stored on the stack. Then the
+    // current status register is stored on the stack. When the routine
+    // that services the interrupt has finished, the status register
+    // and program counter can be restored to how they where before it
+    // occurred. This is impemented by the "RTI" instruction. Once the IRQ
+    // has happened, in a similar way to a reset, a programmable address
+    // is read form hard coded location 0xFFFE, which is subsequently
+    // set to the program counter.
+    pub fn irq(&mut self, bus: &mut Bus) {
+        if !self.regs.interrupt() {
+            // Push the program counter to the stack. It's 16-bits dont
+            // forget so that takes two pushes
+            self.push(bus, self.regs.pc().hi());
+            self.push(bus, self.regs.pc().lo());
+
+            // Then Push the status register to the stack
+            self.regs.set_break_mode(false);
+            self.regs.set_reserved(true);
+            self.regs.set_interrupt(true);
+
+            self.push(bus, self.regs.status());
+
+            // Read new program counter location from fixed address
+            let mut addr: Addr = 0xFFFE.into();
+            let lo = bus.read(addr);
+            let hi = bus.read(addr.inc());
+
+            let pc = Addr::from_bytes(lo, hi);
+            self.regs.set_pc(pc);
+
+            // IRQs take time
+            self.cycles = 7;
+        }
     }
 
-    pub fn step<T>(&mut self, bus: &mut T)
-    where
-        T: CpuBus,
-    {
+    // A Non-Maskable Interrupt cannot be ignored. It behaves in exactly the
+    // same way as a regular IRQ, but reads the new program counter address
+    // form location 0xFFFA.
+    pub fn nmi(&mut self, bus: &mut Bus) {
+        // Push the program counter to the stack. It's 16-bits dont
+        // forget so that takes two pushes
+        self.push(bus, self.regs.pc().hi());
+        self.push(bus, self.regs.pc().lo());
+
+        // Then Push the status register to the stack
+        self.regs.set_break_mode(false);
+        self.regs.set_reserved(true);
+        self.regs.set_interrupt(true);
+
+        self.push(bus, self.regs.status());
+
+        // Read new program counter location from fixed address
+        let mut addr: Addr = 0xFFFA.into();
+        let lo = bus.read(addr);
+        let hi = bus.read(addr.inc());
+
+        let pc = Addr::from_bytes(lo, hi);
+        self.regs.set_pc(pc);
+
+        // NMI take time
+        self.cycles = 8;
+    }
+
+    pub fn step(&mut self, bus: &mut Bus) {
         // Each instruction requires a variable number of clock cycles to execute.
         // In my emulation, I only care about the final result and so I perform
         // the entire computation in one hit. In hardware, each clock cycle would
@@ -64,14 +122,14 @@ impl Cpu {
 
             let (operand, addr_need_add) = addressing::fetch_operand(&opcode, &mut self.regs, bus);
 
-            let (additional_cycle, intr_need_add) =
+            let (additional_cycle, inst_need_add) =
                 instruction::exec_instruction(&opcode, &mut self.regs, bus, operand);
 
             self.cycles += additional_cycle;
 
             // The addressmode and opcode may have altered the number
             // of cycles this instruction requires before its completed
-            if addr_need_add && intr_need_add {
+            if addr_need_add && inst_need_add {
                 self.cycles += 1;
             }
 

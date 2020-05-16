@@ -1,45 +1,6 @@
-use super::bus::CpuBus;
+use super::bus::Bus;
 use super::status_register::StatusRegister;
 use crate::prelude::*;
-
-pub trait CpuRegisters {
-    fn a(&self) -> Byte;
-    fn x(&self) -> Byte;
-    fn y(&self) -> Byte;
-    fn sp(&self) -> Byte;
-    fn pc(&self) -> Addr;
-    fn carry(&self) -> bool;
-    fn zero(&self) -> bool;
-    fn interrupt(&self) -> bool;
-    fn decimal_mode(&self) -> bool;
-    fn break_mode(&self) -> bool;
-    fn reserved(&self) -> bool;
-    fn overflow(&self) -> bool;
-    fn negative(&self) -> bool;
-    fn status(&self) -> Byte;
-
-    fn set_a(&mut self, v: Byte) -> &mut Self;
-    fn set_x(&mut self, v: Byte) -> &mut Self;
-    fn set_y(&mut self, v: Byte) -> &mut Self;
-    fn set_sp(&mut self, v: Byte) -> &mut Self;
-    fn set_pc(&mut self, v: Addr) -> &mut Self;
-    fn set_carry(&mut self, v: bool) -> &mut Self;
-    fn set_zero(&mut self, v: bool) -> &mut Self;
-    fn set_interrupt(&mut self, v: bool) -> &mut Self;
-    fn set_decimal_mode(&mut self, v: bool) -> &mut Self;
-    fn set_break_mode(&mut self, v: bool) -> &mut Self;
-    fn set_reserved(&mut self, v: bool) -> &mut Self;
-    fn set_overflow(&mut self, v: bool) -> &mut Self;
-    fn set_negative(&mut self, v: bool) -> &mut Self;
-    fn set_status(&mut self, v: Byte) -> &mut Self;
-
-    fn inc_sp(&mut self) -> &mut Self;
-    fn inc_pc(&mut self) -> &mut Self;
-    fn dec_sp(&mut self) -> &mut Self;
-    fn dec_pc(&mut self) -> &mut Self;
-    fn update_negative_by(&mut self, v: Byte) -> &mut Self;
-    fn update_zero_by(&mut self, v: Byte) -> &mut Self;
-}
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Registers {
@@ -57,10 +18,7 @@ pub struct Registers {
 }
 
 impl Registers {
-    pub fn reset<T>(&mut self, bus: &mut T)
-    where
-        T: CpuBus,
-    {
+    pub fn reset(&mut self, cpu_bus: &mut Bus) {
         let a: Byte = 0x00.into();
         let x: Byte = 0x00.into();
         let y: Byte = 0x00.into();
@@ -68,8 +26,8 @@ impl Registers {
         let status = StatusRegister::new();
         let pc = {
             let mut pc_addr_base = 0xFFFC.into();
-            let lo = bus.read(pc_addr_base);
-            let hi = bus.read(pc_addr_base.inc());
+            let lo = cpu_bus.read(pc_addr_base);
+            let hi = cpu_bus.read(pc_addr_base.inc());
             Addr::from_bytes(lo, hi)
         };
 
@@ -80,160 +38,158 @@ impl Registers {
         self.status = status;
         self.pc = pc;
     }
-}
 
-impl CpuRegisters for Registers {
-    fn a(&self) -> Byte {
+    pub fn a(&self) -> Byte {
         self.a
     }
 
-    fn x(&self) -> Byte {
+    pub fn x(&self) -> Byte {
         self.x
     }
 
-    fn y(&self) -> Byte {
+    pub fn y(&self) -> Byte {
         self.y
     }
 
-    fn sp(&self) -> Byte {
+    pub fn sp(&self) -> Byte {
         self.sp
     }
 
-    fn pc(&self) -> Addr {
+    pub fn pc(&self) -> Addr {
         self.pc
     }
 
-    fn carry(&self) -> bool {
+    pub fn carry(&self) -> bool {
         self.status.carry()
     }
 
-    fn zero(&self) -> bool {
+    pub fn zero(&self) -> bool {
         self.status.zero()
     }
 
-    fn interrupt(&self) -> bool {
+    pub fn interrupt(&self) -> bool {
         self.status.interrupt()
     }
 
-    fn decimal_mode(&self) -> bool {
+    pub fn decimal_mode(&self) -> bool {
         self.status.decimal_mode()
     }
 
-    fn break_mode(&self) -> bool {
+    pub fn break_mode(&self) -> bool {
         self.status.break_mode()
     }
 
-    fn reserved(&self) -> bool {
+    pub fn reserved(&self) -> bool {
         self.status.reserved()
     }
 
-    fn overflow(&self) -> bool {
+    pub fn overflow(&self) -> bool {
         self.status.overflow()
     }
 
-    fn negative(&self) -> bool {
+    pub fn negative(&self) -> bool {
         self.status.negative()
     }
 
-    fn status(&self) -> Byte {
+    pub fn status(&self) -> Byte {
         Byte(self.status.clone().into())
     }
 
-    fn set_a(&mut self, v: Byte) -> &mut Self {
+    pub fn set_a(&mut self, v: Byte) -> &mut Self {
         self.a = v;
         self
     }
 
-    fn set_x(&mut self, v: Byte) -> &mut Self {
+    pub fn set_x(&mut self, v: Byte) -> &mut Self {
         self.x = v;
         self
     }
 
-    fn set_y(&mut self, v: Byte) -> &mut Self {
+    pub fn set_y(&mut self, v: Byte) -> &mut Self {
         self.y = v;
         self
     }
 
-    fn set_sp(&mut self, v: Byte) -> &mut Self {
+    pub fn set_sp(&mut self, v: Byte) -> &mut Self {
         self.sp = v;
         self
     }
 
-    fn set_pc(&mut self, v: Addr) -> &mut Self {
+    pub fn set_pc(&mut self, v: Addr) -> &mut Self {
         self.pc = v;
         self
     }
 
-    fn set_carry(&mut self, v: bool) -> &mut Self {
+    pub fn set_carry(&mut self, v: bool) -> &mut Self {
         self.status.set_carry(v);
         self
     }
 
-    fn set_zero(&mut self, v: bool) -> &mut Self {
+    pub fn set_zero(&mut self, v: bool) -> &mut Self {
         self.status.set_zero(v);
         self
     }
 
-    fn set_interrupt(&mut self, v: bool) -> &mut Self {
+    pub fn set_interrupt(&mut self, v: bool) -> &mut Self {
         self.status.set_interrupt(v);
         self
     }
 
-    fn set_decimal_mode(&mut self, v: bool) -> &mut Self {
+    pub fn set_decimal_mode(&mut self, v: bool) -> &mut Self {
         self.status.set_decimal_mode(v);
         self
     }
 
-    fn set_break_mode(&mut self, v: bool) -> &mut Self {
+    pub fn set_break_mode(&mut self, v: bool) -> &mut Self {
         self.status.set_break_mode(v);
         self
     }
 
-    fn set_reserved(&mut self, v: bool) -> &mut Self {
+    pub fn set_reserved(&mut self, v: bool) -> &mut Self {
         self.status.set_reserved(v);
         self
     }
 
-    fn set_overflow(&mut self, v: bool) -> &mut Self {
+    pub fn set_overflow(&mut self, v: bool) -> &mut Self {
         self.status.set_overflow(v);
         self
     }
 
-    fn set_negative(&mut self, v: bool) -> &mut Self {
+    pub fn set_negative(&mut self, v: bool) -> &mut Self {
         self.status.set_negative(v);
         self
     }
 
-    fn set_status(&mut self, v: Byte) -> &mut Self {
+    pub fn set_status(&mut self, v: Byte) -> &mut Self {
         self.status = v.into();
         self
     }
 
-    fn inc_sp(&mut self) -> &mut Self {
+    pub fn inc_sp(&mut self) -> &mut Self {
         self.sp.inc();
         self
     }
 
-    fn inc_pc(&mut self) -> &mut Self {
+    pub fn inc_pc(&mut self) -> &mut Self {
         self.pc.inc();
         self
     }
 
-    fn dec_sp(&mut self) -> &mut Self {
+    pub fn dec_sp(&mut self) -> &mut Self {
         self.sp.dec();
         self
     }
 
-    fn dec_pc(&mut self) -> &mut Self {
+    pub fn dec_pc(&mut self) -> &mut Self {
         self.pc.dec();
         self
     }
 
-    fn update_negative_by(&mut self, v: Byte) -> &mut Self {
+    pub fn update_negative_by(&mut self, v: Byte) -> &mut Self {
         self.set_negative(v.is_neg())
     }
 
-    fn update_zero_by(&mut self, v: Byte) -> &mut Self {
+    pub fn update_zero_by(&mut self, v: Byte) -> &mut Self {
         self.set_zero(v.is_clear())
     }
 }

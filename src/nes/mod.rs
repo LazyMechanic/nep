@@ -1,6 +1,7 @@
 pub mod cartridge;
 pub mod clock;
 pub mod cpu;
+pub mod dma;
 pub mod ppu;
 pub mod prelude;
 pub mod ram;
@@ -21,6 +22,7 @@ where
 
     let mut internal_ram = Rc::new(RefCell::new(ram::internal_ram::InternalRam::new()));
 
+    let mut dma = dma::Dma::new();
     let mut cpu = cpu::Cpu::default();
     let mut ppu = Rc::new(RefCell::new(ppu::Ppu::new(cart.clone())));
 
@@ -34,11 +36,15 @@ where
         clock.update();
 
         if clock.need_step_cpu() {
-            // TODO: cpu.step(&mut cpu_bus);
+            if dma.should_run() {
+                dma.step(&mut cpu_bus);
+            } else {
+                cpu.step(&mut cpu_bus);
+            }
         }
 
         if clock.need_step_ppu() {
-            // TODO: ppu.step(&mut ppu_bus);
+            ppu.borrow_mut().step();
         }
     }
 

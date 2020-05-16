@@ -40,4 +40,9 @@ impl Ppu {
     pub fn write_chr(&mut self, addr: Addr, v: Byte) {
         unimplemented!()
     }
+
+    pub fn transfer_sprite(&mut self, addr: Addr, v: Byte) {
+        let addr = addr + self.regs.oam.addr();
+        self.ctx.palette_ram.write(addr & 0x0FFF.into(), v);
+    }
 }
