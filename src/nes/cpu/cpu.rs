@@ -6,14 +6,14 @@ use super::registers::Registers;
 use crate::prelude::*;
 
 pub struct Cpu {
-    regs:   Registers,
+    regs: Registers,
     cycles: u8,
 }
 
 impl Cpu {
     pub fn new() -> Self {
         Self {
-            regs:   Registers::new(),
+            regs: Registers::new(),
             cycles: 0,
         }
     }
@@ -48,19 +48,19 @@ impl Cpu {
     // has happened, in a similar way to a reset, a programmable address
     // is read form hard coded location 0xFFFE, which is subsequently
     // set to the program counter.
-    pub fn irq(&mut self, bus: &mut CpuBus) {
+    pub fn irq(&mut self, mut bus: CpuBus) {
         if !self.regs.interrupt() {
             // Push the program counter to the stack. It's 16-bits dont
             // forget so that takes two pushes
-            self.push(bus, self.regs.pc().hi());
-            self.push(bus, self.regs.pc().lo());
+            self.push(&mut bus, self.regs.pc().hi());
+            self.push(&mut bus, self.regs.pc().lo());
 
             // Then Push the status register to the stack
             self.regs.set_break_mode(false);
             self.regs.set_reserved(true);
             self.regs.set_interrupt(true);
 
-            self.push(bus, self.regs.status());
+            self.push(&mut bus, self.regs.status());
 
             // Read new program counter location from fixed address
             let mut addr: Addr = 0xFFFE.into();
@@ -78,18 +78,18 @@ impl Cpu {
     // A Non-Maskable Interrupt cannot be ignored. It behaves in exactly the
     // same way as a regular IRQ, but reads the new program counter address
     // form location 0xFFFA.
-    pub fn nmi(&mut self, bus: &mut CpuBus) {
+    pub fn nmi(&mut self, mut bus: CpuBus) {
         // Push the program counter to the stack. It's 16-bits dont
         // forget so that takes two pushes
-        self.push(bus, self.regs.pc().hi());
-        self.push(bus, self.regs.pc().lo());
+        self.push(&mut bus, self.regs.pc().hi());
+        self.push(&mut bus, self.regs.pc().lo());
 
         // Then Push the status register to the stack
         self.regs.set_break_mode(false);
         self.regs.set_reserved(true);
         self.regs.set_interrupt(true);
 
-        self.push(bus, self.regs.status());
+        self.push(&mut bus, self.regs.status());
 
         // Read new program counter location from fixed address
         let mut addr: Addr = 0xFFFA.into();

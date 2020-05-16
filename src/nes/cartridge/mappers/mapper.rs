@@ -9,4 +9,8 @@ pub trait Mapper {
     fn mirror(&self) -> Mirror {
         Mirror::Hardware
     }
+    fn has_irq(&self) -> bool {
+        false
+    }
+    fn clear_irq(&mut self) {}
 }

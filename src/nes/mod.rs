@@ -27,11 +27,11 @@ use std::rc::Rc;
 
 pub struct Emu {
     clock: Clock,
-    cart:  Cartridge,
-    ram:   Ram,
-    dma:   Dma,
-    cpu:   Cpu,
-    ppu:   Ppu,
+    cart: Cartridge,
+    ram: Ram,
+    dma: Dma,
+    cpu: Cpu,
+    ppu: Ppu,
     joy_1: Joypad,
     joy_2: Joypad,
 }
@@ -40,11 +40,11 @@ impl Emu {
     pub fn new() -> Self {
         Self {
             clock: Clock::new(),
-            cart:  Cartridge::new(),
-            ram:   Ram::new(),
-            dma:   Dma::new(),
-            cpu:   Cpu::new(),
-            ppu:   Ppu::new(),
+            cart: Cartridge::new(),
+            ram: Ram::new(),
+            dma: Dma::new(),
+            cpu: Cpu::new(),
+            ppu: Ppu::new(),
             joy_1: Joypad::default(),
             joy_2: Joypad::default(),
         }
@@ -79,8 +79,6 @@ impl Emu {
         self.joy_1 = joy_1_state.into();
         self.joy_2 = joy_2_state.into();
 
-        self.clock.update();
-
         if self.clock.need_step_ppu() {
             self.ppu.step(&mut self.cart);
         }
@@ -113,5 +111,35 @@ impl Emu {
                 ));
             }
         }
+
+        // The PPU is capable of emitting an interrupt to indicate the
+        // vertical blanking period has been entered. If it has, we need
+        // to send that irq to the CPU.
+        if self.ppu.has_nmi() {
+            self.ppu.clear_nmi();
+            self.cpu.nmi(CpuBus::new(
+                &mut self.cart,
+                &mut self.ram,
+                &mut self.ppu,
+                &mut self.dma,
+                &mut self.joy_1,
+                &mut self.joy_2,
+            ));
+        }
+
+        // Check if cartridge is requesting IRQ
+        if self.cart.has_irq() {
+            self.cart.clear_irq();
+            self.cpu.irq(CpuBus::new(
+                &mut self.cart,
+                &mut self.ram,
+                &mut self.ppu,
+                &mut self.dma,
+                &mut self.joy_1,
+                &mut self.joy_2,
+            ));
+        }
+
+        self.clock.update();
     }
 }

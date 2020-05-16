@@ -4,21 +4,33 @@ use crate::prelude::*;
 
 pub struct Ppu {
     oam: Oam,
+    nmi: bool,
 }
 
 impl Ppu {
     pub fn new() -> Self {
-        Self { oam: Oam::new() }
+        Self {
+            oam: Oam::new(),
+            nmi: false,
+        }
     }
 
     pub fn reset(&mut self) {}
 
-    pub fn step(&mut self, cart: &mut Cartridge) {
-        //todo!();
-    }
-
     pub fn oam_mut(&mut self) -> &mut Oam {
         &mut self.oam
+    }
+
+    pub fn has_nmi(&self) -> bool {
+        self.nmi
+    }
+
+    pub fn clear_nmi(&mut self) {
+        self.nmi = false;
+    }
+
+    pub fn step(&mut self, cart: &mut Cartridge) {
+        //todo!();
     }
 
     pub fn read(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {

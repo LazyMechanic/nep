@@ -20,8 +20,8 @@ pub enum Mirror {
 pub struct Cartridge {
     prg_mem: Vec<Byte>,
     chr_mem: Vec<Byte>,
-    mirror:  Mirror,
-    mapper:  Option<Box<dyn Mapper>>,
+    mirror: Mirror,
+    mapper: Option<Box<dyn Mapper>>,
 }
 
 const PROGRAM_ROM_SIZE: usize = 16384; // 16 kb
@@ -35,8 +35,8 @@ impl Cartridge {
         Self {
             prg_mem: vec![Byte(0); 0],
             chr_mem: vec![Byte(0); 0],
-            mirror:  Mirror::Hardware,
-            mapper:  None,
+            mirror: Mirror::Hardware,
+            mapper: None,
         }
     }
 
@@ -342,6 +342,20 @@ impl Cartridge {
         return match mapper_mirror {
             Mirror::Hardware => self.mirror,
             _ => mapper_mirror,
+        };
+    }
+
+    pub fn has_irq(&self) -> bool {
+        match self.mapper {
+            Some(ref m) => m.has_irq(),
+            _ => false,
+        }
+    }
+
+    pub fn clear_irq(&mut self) {
+        match self.mapper {
+            Some(ref mut m) => m.clear_irq(),
+            _ => {}
         };
     }
 }
