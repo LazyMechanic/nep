@@ -21,6 +21,7 @@ use ppu::Ppu;
 use ram::Ram;
 
 use std::cell::RefCell;
+use std::io::{Read, Seek};
 use std::path::Path;
 use std::rc::Rc;
 
@@ -62,11 +63,14 @@ impl Emu {
         self.clock.reset();
     }
 
-    pub fn load<P>(&mut self, file_path: P) -> Result<()>
-    where
-        P: AsRef<Path>,
-    {
-        self.cart.load(file_path)?;
+    pub fn load<F: Read + Seek>(&mut self, file: &mut F) -> Result<()> {
+        self.cart.load(file)?;
+        self.reset();
+        Ok(())
+    }
+
+    pub fn load_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<()> {
+        self.cart.load_from_file(file_path)?;
         self.reset();
         Ok(())
     }

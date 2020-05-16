@@ -40,20 +40,13 @@ impl Cartridge {
         }
     }
 
-    pub fn from_file<P>(file_path: P) -> Result<Self>
-    where
-        P: AsRef<Path>,
-    {
+    pub fn from_file<P: AsRef<Path>>(file_path: P) -> Result<Self> {
         let mut s = Self::new();
-        s.load(file_path)?;
+        s.load_from_file(file_path)?;
         Ok(s)
     }
 
-    pub fn load<P>(&mut self, file_path: P) -> Result<()>
-    where
-        P: AsRef<Path>,
-    {
-        println!("[CARTGE] start read file: {}", file_path.as_ref().display());
+    pub fn load<F: Read + Seek>(&mut self, file: &mut F) -> Result<()> {
         // iNES header format (16 bytes):
         // 0-3: Constant $4E $45 $53 $1A ("NES" followed by MS-DOS end-of-file)
         // 4: Size of PRG ROM in 16 KB units
@@ -100,8 +93,6 @@ impl Cartridge {
         //   ||  ++- TV system (0: NTSC; 2: PAL; 1/3: dual compatible)
         //   |+----- PRG RAM ($6000-$7FFF) (0: present; 1: not present)
         //   +------ 0: Board has no bus conflicts; 1: Board has bus conflicts
-
-        let mut file = File::open(file_path).context(errors::OpenFile)?;
 
         let mut header_buf: [u8; HEADER_SIZE] = [0; HEADER_SIZE];
         let header_size = file.read(&mut header_buf).context(errors::ReadFile)?;
@@ -261,6 +252,13 @@ impl Cartridge {
         self.mapper = Some(mapper);
 
         Ok(())
+    }
+
+    pub fn load_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<()> {
+        println!("[CARTGE] start read file: {}", file_path.as_ref().display());
+
+        let mut file = File::open(file_path).context(errors::OpenFile)?;
+        self.load(&mut file)
     }
 
     pub fn read(&mut self, addr: Addr) -> Byte {
