@@ -1,35 +1,75 @@
-use crate::cpu::bus::Bus;
+use crate::nes::ppu::oam::Oam;
+use crate::nes::ram::Ram;
 use crate::prelude::*;
-use std::borrow::BorrowMut;
 
-#[derive(Debug)]
 pub struct Dma {
-    reg:        Byte,
-    should_run: bool,
+    has_request: bool,
+    wait_start:  bool,
+    data:        Byte,
+    page:        Addr,
+    addr:        Addr,
+    cycles:      u16,
 }
 
 impl Dma {
     pub fn new() -> Self {
         Self {
-            reg:        Byte(0),
-            should_run: false,
+            has_request: false,
+            wait_start:  true,
+            data:        0x00.into(),
+            page:        0x00.into(),
+            addr:        0x0000.into(),
+            cycles:      0,
+        }
+    }
+
+    pub fn has_request(&self) -> bool {
+        self.has_request
+    }
+
+    pub fn wait_start(&self) -> bool {
+        self.wait_start
+    }
+
+    pub fn start(&mut self) {
+        self.wait_start = false;
+    }
+
+    fn reset(&mut self) {
+        self.has_request = false;
+        self.wait_start = true;
+        self.addr = 0x0000.into();
+        self.page = 0x0000.into();
+        self.data = 0x00.into();
+        self.cycles = 0;
+    }
+
+    fn need_read(&self) -> bool {
+        self.cycles % 2 == 0
+    }
+
+    pub fn step(&mut self, ram: &mut Ram, oam: &mut Oam) {
+        if self.need_read() {
+            // Read from RAM
+            let addr = self.page | self.addr;
+            self.data = ram.read(addr);
+            self.cycles += 1;
+        } else {
+            // Write to OAM
+            // On odd clock cycles, write to PPU OAM
+            oam.write(self.addr, self.data);
+            self.addr.inc();
+            self.cycles += 1;
+
+            if self.addr == 0x0000.into() {
+                self.reset();
+            }
         }
     }
 
     pub fn write(&mut self, v: Byte) {
-        self.reg = v;
-        self.should_run = true;
-    }
-
-    pub fn should_run(&self) -> bool {
-        self.should_run
-    }
-
-    pub fn step(&mut self, cpu_bus: &mut Bus) {
-        let addr = self.reg.as_hi_addr();
-        for i in 0..0x0100 {
-            let v = cpu_bus.read(addr + i.into());
-        }
-        self.should_run = false;
+        self.reset();
+        self.page = v.as_hi_addr();
+        self.has_request = true;
     }
 }

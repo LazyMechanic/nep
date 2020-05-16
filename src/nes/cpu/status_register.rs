@@ -2,7 +2,7 @@ use crate::prelude::*;
 use bitfield::*;
 
 bitfield! {
-    #[derive(Default, Clone, Copy)]
+    #[derive(Clone, Copy)]
     pub struct StatusRegister(u8);
     impl Debug;
     // =============================== Bit position: 7654 3210

@@ -1,8 +1,8 @@
-use super::bus::Bus;
+use super::bus::CpuBus;
 use super::status_register::StatusRegister;
 use crate::prelude::*;
 
-#[derive(Default, Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug)]
 pub struct Registers {
     pub a:      Byte,
     // Accumulator register
@@ -18,7 +18,18 @@ pub struct Registers {
 }
 
 impl Registers {
-    pub fn reset(&mut self, cpu_bus: &mut Bus) {
+    pub fn new() -> Self {
+        Self {
+            a:      0x00.into(),
+            x:      0x00.into(),
+            y:      0x00.into(),
+            sp:     0x00.into(),
+            pc:     0x00.into(),
+            status: StatusRegister::new(),
+        }
+    }
+
+    pub fn reset(&mut self, mut cpu_bus: CpuBus) {
         let a: Byte = 0x00.into();
         let x: Byte = 0x00.into();
         let y: Byte = 0x00.into();

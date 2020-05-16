@@ -3,12 +3,16 @@ use std::time;
 const CPU_COUNT: u64 = 3;
 const PPU_COUNT: u64 = 1;
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Clock {
     counter: u64,
 }
 
 impl Clock {
+    pub fn new() -> Self {
+        Self { counter: 0 }
+    }
+
     pub fn reset(&mut self) {
         self.counter = 0;
     }
@@ -23,6 +27,10 @@ impl Clock {
 
     pub fn need_step_ppu(&self) -> bool {
         self.counter % PPU_COUNT == 0
+    }
+
+    pub fn need_start_dma(&self) -> bool {
+        self.counter % 2 == 1
     }
 
     pub fn counter(&self) -> u64 {

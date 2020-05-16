@@ -1,5 +1,5 @@
 use super::addressing::AddressingMode;
-use super::bus::Bus;
+use super::bus::CpuBus;
 use super::opcode::OpCode;
 use super::operand::Operand;
 use super::registers::Registers;
@@ -71,7 +71,7 @@ pub enum Instruction {
 pub fn exec_instruction(
     opcode: &OpCode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (
     /*          additional cycles*/ NumOfCycles,
@@ -140,7 +140,7 @@ pub fn exec_instruction(
     result
 }
 
-fn unwrap_operand(bus: &mut Bus, operand: Operand) -> Byte {
+fn unwrap_operand(bus: &mut CpuBus, operand: Operand) -> Byte {
     match operand {
         Operand::None => panic!("expected Operand::Byte || Operand::Addr, Operand::None handled"),
         Operand::Byte(v) => v,
@@ -148,7 +148,7 @@ fn unwrap_operand(bus: &mut Bus, operand: Operand) -> Byte {
     }
 }
 
-fn unwrap_operand_with_addr(bus: &mut Bus, operand: Operand) -> (Byte, Addr) {
+fn unwrap_operand_with_addr(bus: &mut CpuBus, operand: Operand) -> (Byte, Addr) {
     match operand {
         Operand::None => panic!("expected Operand::Byte || Operand::Addr, Operand::None handled"),
         Operand::Byte(v) => (v, Addr(0)),
@@ -164,37 +164,37 @@ fn is_same_page(left: Addr, right: Addr) -> bool {
     left.hi() == right.hi()
 }
 
-fn push(registers: &mut Registers, bus: &mut Bus, v: Byte) {
+fn push(registers: &mut Registers, bus: &mut CpuBus, v: Byte) {
     let addr = registers.sp().as_lo_addr() | 0x0100.into();
     bus.write(addr, v);
     registers.dec_sp();
 }
 
-fn push_pc(registers: &mut Registers, bus: &mut Bus) {
+fn push_pc(registers: &mut Registers, bus: &mut CpuBus) {
     let pc = registers.pc();
     push(registers, bus, pc.hi());
     push(registers, bus, pc.lo());
 }
 
-fn push_status(registers: &mut Registers, bus: &mut Bus) {
+fn push_status(registers: &mut Registers, bus: &mut CpuBus) {
     let status = registers.status();
     push(registers, bus, status);
 }
 
-fn pop(registers: &mut Registers, bus: &mut Bus) -> Byte {
+fn pop(registers: &mut Registers, bus: &mut CpuBus) -> Byte {
     registers.inc_sp();
     let addr = registers.sp().as_lo_addr() | 0x0100.into();
     bus.read(addr)
 }
 
-fn pop_pc(registers: &mut Registers, bus: &mut Bus) {
+fn pop_pc(registers: &mut Registers, bus: &mut CpuBus) {
     let lo = pop(registers, bus);
     let hi = pop(registers, bus);
     let addr = Addr::from_bytes(lo, hi);
     registers.set_pc(addr);
 }
 
-fn pop_status(registers: &mut Registers, bus: &mut Bus) {
+fn pop_status(registers: &mut Registers, bus: &mut CpuBus) {
     let status = pop(registers, bus);
     registers.set_status(status);
 }
@@ -263,7 +263,7 @@ fn pop_status(registers: &mut Registers, bus: &mut Bus) {
 fn adc(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -299,7 +299,7 @@ fn adc(
 fn and(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -320,7 +320,7 @@ fn and(
 fn asl(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
@@ -348,7 +348,7 @@ fn asl(
 fn bcc(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if !registers.carry() {
@@ -372,7 +372,7 @@ fn bcc(
 fn bcs(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if registers.carry() {
@@ -396,7 +396,7 @@ fn bcs(
 fn beq(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if registers.zero() {
@@ -418,7 +418,7 @@ fn beq(
 fn bit(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -437,7 +437,7 @@ fn bit(
 fn bmi(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if registers.negative() {
@@ -459,7 +459,7 @@ fn bmi(
 fn bne(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if !registers.zero() {
@@ -483,7 +483,7 @@ fn bne(
 fn bpl(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if !registers.negative() {
@@ -507,7 +507,7 @@ fn bpl(
 fn brk(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     operand.unwrap_none();
@@ -532,7 +532,7 @@ fn brk(
 fn bvc(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if !registers.overflow() {
@@ -556,7 +556,7 @@ fn bvc(
 fn bvs(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     if registers.overflow() {
@@ -580,7 +580,7 @@ fn bvs(
 fn clc(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_carry(false);
@@ -592,7 +592,7 @@ fn clc(
 fn cld(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_decimal_mode(false);
@@ -604,7 +604,7 @@ fn cld(
 fn cli(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_interrupt(false);
@@ -616,7 +616,7 @@ fn cli(
 fn clv(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_overflow(false);
@@ -629,7 +629,7 @@ fn clv(
 fn cmp(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -650,7 +650,7 @@ fn cmp(
 fn cpx(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -671,7 +671,7 @@ fn cpx(
 fn cpy(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -692,7 +692,7 @@ fn cpy(
 fn dec(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (mut fetched, addr) = unwrap_operand_with_addr(bus, operand);
@@ -710,7 +710,7 @@ fn dec(
 fn dex(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.x().dec();
@@ -729,7 +729,7 @@ fn dex(
 fn dey(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.y().dec();
@@ -748,7 +748,7 @@ fn dey(
 fn eor(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -769,7 +769,7 @@ fn eor(
 fn inc(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (mut fetched, addr) = unwrap_operand_with_addr(bus, operand);
@@ -787,7 +787,7 @@ fn inc(
 fn inx(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.x().inc();
@@ -803,7 +803,7 @@ fn inx(
 fn iny(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.y().inc();
@@ -821,7 +821,7 @@ fn iny(
 fn jmp(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
@@ -835,7 +835,7 @@ fn jmp(
 fn jsr(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
@@ -853,7 +853,7 @@ fn jsr(
 fn lda(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -872,7 +872,7 @@ fn lda(
 fn ldx(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -891,7 +891,7 @@ fn ldx(
 fn ldy(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -907,7 +907,7 @@ fn ldy(
 fn lsr(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
@@ -930,7 +930,7 @@ fn lsr(
 fn nop(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     return match mode {
@@ -945,7 +945,7 @@ fn nop(
 fn ora(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -965,7 +965,7 @@ fn ora(
 fn pha(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     push(registers, bus, registers.a());
@@ -978,7 +978,7 @@ fn pha(
 fn php(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_break_mode(true).set_reserved(true);
@@ -996,7 +996,7 @@ fn php(
 fn pla(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = pop(registers, bus);
@@ -1014,7 +1014,7 @@ fn pla(
 fn plp(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     pop_status(registers, bus);
@@ -1024,7 +1024,7 @@ fn plp(
 fn rol(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
@@ -1050,7 +1050,7 @@ fn rol(
 fn ror(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
@@ -1076,7 +1076,7 @@ fn ror(
 fn rti(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     pop_status(registers, bus);
@@ -1090,7 +1090,7 @@ fn rti(
 fn rts(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     pop_pc(registers, bus);
@@ -1127,7 +1127,7 @@ fn rts(
 fn sbc(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
@@ -1154,7 +1154,7 @@ fn sbc(
 fn sec(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_carry(true);
@@ -1166,7 +1166,7 @@ fn sec(
 fn sed(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_decimal_mode(true);
@@ -1178,7 +1178,7 @@ fn sed(
 fn sei(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     registers.set_interrupt(true);
@@ -1190,7 +1190,7 @@ fn sei(
 fn sta(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
@@ -1205,7 +1205,7 @@ fn sta(
 fn stx(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
@@ -1220,7 +1220,7 @@ fn stx(
 fn sty(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let addr = operand.unwrap_addr();
@@ -1236,7 +1236,7 @@ fn sty(
 fn tax(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.a();
@@ -1255,7 +1255,7 @@ fn tax(
 fn tay(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.a();
@@ -1274,7 +1274,7 @@ fn tay(
 fn tsx(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.sp();
@@ -1293,7 +1293,7 @@ fn tsx(
 fn txa(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.x();
@@ -1311,7 +1311,7 @@ fn txa(
 fn txs(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.x();
@@ -1327,7 +1327,7 @@ fn txs(
 fn tya(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let res = registers.y();
@@ -1344,7 +1344,7 @@ fn tya(
 fn xxx(
     mode: &AddressingMode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     (0, false)

@@ -1,4 +1,4 @@
-use super::bus::Bus;
+use super::bus::CpuBus;
 use super::opcode::OpCode;
 use super::operand::Operand;
 use super::registers::Registers;
@@ -22,14 +22,14 @@ pub enum AddressingMode {
     ZPY, // Zero page with Y offset
 }
 
-pub fn fetch_instruction_code(registers: &mut Registers, bus: &mut Bus) -> Byte {
+pub fn fetch_instruction_code(registers: &mut Registers, bus: &mut CpuBus) -> Byte {
     fetch_byte(registers, bus)
 }
 
 pub fn fetch_operand(
     opcode: &OpCode,
     registers: &mut Registers,
-    bus: &mut Bus,
+    bus: &mut CpuBus,
 ) -> (
     /*       operand*/ Operand,
     /*need add cycle*/ bool,
@@ -54,29 +54,29 @@ pub fn fetch_operand(
     result
 }
 
-fn fetch_byte(registers: &mut Registers, bus: &mut Bus) -> Byte {
+fn fetch_byte(registers: &mut Registers, bus: &mut CpuBus) -> Byte {
     let b = bus.read(registers.pc());
     registers.inc_pc();
     b
 }
 
-fn fetch_word(registers: &mut Registers, bus: &mut Bus) -> Word {
+fn fetch_word(registers: &mut Registers, bus: &mut CpuBus) -> Word {
     let lo = fetch_byte(registers, bus);
     let hi = fetch_byte(registers, bus);
 
     Word::from_bytes(lo, hi)
 }
 
-fn fetch_accumulator(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_accumulator(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     (Operand::None, false)
 }
 
-fn fetch_absolute(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_absolute(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let word = fetch_word(registers, bus);
     (Operand::Addr(word.into()), false)
 }
 
-fn fetch_absolute_x(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_absolute_x(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let word = fetch_word(registers, bus);
     let addr = Addr::from(word.clone()) + registers.x().as_lo_addr();
 
@@ -87,7 +87,7 @@ fn fetch_absolute_x(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool)
     }
 }
 
-fn fetch_absolute_y(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_absolute_y(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let word = fetch_word(registers, bus);
     let addr = Addr::from(word.clone()) + registers.y().as_lo_addr();
 
@@ -98,16 +98,16 @@ fn fetch_absolute_y(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool)
     }
 }
 
-fn fetch_implied(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_implied(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     (Operand::None, false)
 }
 
-fn fetch_immediate(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_immediate(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let b = fetch_byte(registers, bus);
     (Operand::Byte(b), false)
 }
 
-fn fetch_indirect(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_indirect(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let mut word = fetch_word(registers, bus);
     if word.lo().is_set() {
         // Simulate page boundary hardware bug
@@ -121,7 +121,7 @@ fn fetch_indirect(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
     }
 }
 
-fn fetch_indirect_x(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_indirect_x(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let mut base = fetch_byte(registers, bus).as_lo_addr() + registers.x().as_lo_addr();
 
     let lo = bus.read(base);
@@ -132,7 +132,7 @@ fn fetch_indirect_x(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool)
     (Operand::Addr(addr), false)
 }
 
-fn fetch_indirect_y(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_indirect_y(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let mut base = fetch_byte(registers, bus).as_lo_addr();
 
     let lo = bus.read(base);
@@ -147,7 +147,7 @@ fn fetch_indirect_y(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool)
     }
 }
 
-fn fetch_relative(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_relative(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let base = fetch_byte(registers, bus);
     if base.is_neg() {
         (Operand::Addr(base.as_lo_addr() | 0xFF00.into()), false)
@@ -156,17 +156,17 @@ fn fetch_relative(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
     }
 }
 
-fn fetch_zero_page(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_zero_page(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let addr = fetch_byte(registers, bus).as_lo_addr();
     (Operand::Addr(addr), false)
 }
 
-fn fetch_zero_page_x(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_zero_page_x(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let addr = fetch_byte(registers, bus).as_lo_addr() + registers.x().as_lo_addr();
     (Operand::Addr(addr), false)
 }
 
-fn fetch_zero_page_y(registers: &mut Registers, bus: &mut Bus) -> (Operand, bool) {
+fn fetch_zero_page_y(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let addr = fetch_byte(registers, bus).as_lo_addr() + registers.y().as_lo_addr();
     (Operand::Addr(addr), false)
 }

@@ -1,48 +1,39 @@
-use super::context::Context;
-use super::registers::Registers;
+use super::oam::{Oam, OamEntry};
 use crate::nes::cartridge::Cartridge;
 use crate::prelude::*;
 
-use std::cell::RefCell;
-use std::rc::Rc;
-
 pub struct Ppu {
-    regs: Registers,
-    ctx:  Context,
+    oam: Oam,
 }
 
 impl Ppu {
-    pub fn new(cart: Rc<RefCell<Cartridge>>) -> Self {
-        Self {
-            regs: Registers::new(),
-            ctx:  Context::new(cart),
-        }
+    pub fn new() -> Self {
+        Self { oam: Oam::new() }
     }
 
-    pub fn reset(&mut self, cart: Rc<RefCell<Cartridge>>) {
-        self.ctx.cart = cart;
+    pub fn reset(&mut self) {}
+
+    pub fn step(&mut self, cart: &mut Cartridge) {
+        todo!();
     }
 
-    pub fn step(&mut self) {}
-
-    pub fn read(&mut self, addr: Addr) -> Byte {
-        self.regs.read(&mut self.ctx, addr)
+    pub fn oam_mut(&mut self) -> &mut Oam {
+        &mut self.oam
     }
 
-    pub fn write(&mut self, addr: Addr, v: Byte) {
-        self.regs.write(&mut self.ctx, addr, v)
-    }
-
-    pub fn read_chr(&mut self, addr: Addr) -> Byte {
+    pub fn read(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
         unimplemented!()
     }
 
-    pub fn write_chr(&mut self, addr: Addr, v: Byte) {
+    pub fn write(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
         unimplemented!()
     }
 
-    pub fn transfer_sprite(&mut self, addr: Addr, v: Byte) {
-        let addr = addr + self.regs.oam.addr();
-        self.ctx.palette_ram.write(addr & 0x0FFF.into(), v);
+    fn read_chr(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
+        unimplemented!()
+    }
+
+    fn write_chr(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
+        unimplemented!()
     }
 }

@@ -1,10 +1,7 @@
-pub mod oam;
-pub mod ppuaddr;
-pub mod ppuctrl;
-pub mod ppudata;
-pub mod ppumask;
-pub mod ppuscroll;
-pub mod ppustatus;
-mod registers;
+mod ppuctrl;
+mod ppumask;
+mod ppustatus;
 
-pub use registers::*;
+pub use ppuctrl::*;
+pub use ppumask::*;
+pub use ppustatus::*;
