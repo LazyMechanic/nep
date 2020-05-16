@@ -159,6 +159,13 @@ impl Addr {
     pub fn with_lo_set() -> Addr {
         0x00FF.into()
     }
+
+    pub fn inspect_bit(&self, bit_no: u16) -> bool {
+        match bit_no {
+            0..=15 => self.0 & (1u16 << bit_no) != 0,
+            _ => false,
+        }
+    }
 }
 
 impl ExtAddr {

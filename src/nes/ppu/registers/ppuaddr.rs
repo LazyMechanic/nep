@@ -36,6 +36,10 @@ impl PpuAddr {
         self.addr
     }
 
+    pub fn update(&mut self, offset: Addr) {
+        self.addr += offset;
+    }
+
     pub fn write(&mut self, v: Byte) {
         match self.part {
             Part::Hi => {

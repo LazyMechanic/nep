@@ -25,7 +25,7 @@ pub struct Cartridge {
 }
 
 const PROGRAM_ROM_SIZE: usize = 16384; // 16 kb
-const CHARACTER_ROM_SIZE: usize = 8192; // 16 kb
+const CHARACTER_ROM_SIZE: usize = 8192; // 8 kb
 const PROGRAM_RAM_SIZE: usize = 8192; // 8 kb
 const CHARACTER_RAM_SIZE: usize = 8192; // 8 kb
 const HEADER_SIZE: usize = 16; // 2 byte

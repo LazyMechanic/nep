@@ -1,5 +1,4 @@
 use crate::prelude::*;
-use crate::ram::Ram;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Oam {
@@ -39,12 +38,12 @@ impl Oam {
     // Write OAM data here.
     // Writes will increment OAMADDR after the write;
     // reads during vertical or forced blanking return the value from OAM at that address but do not increment.
-    pub fn write_data(&mut self, ram: &mut Ram, v: Byte) {
-        ram.write(self.addr, v);
+    pub fn write_data(&mut self, oam_mem: &mut Vec<Byte>, v: Byte) {
+        oam_mem[self.addr.as_usize()] = v;
         self.addr.inc();
     }
 
-    pub fn read_data(&self, ram: &Ram) -> Byte {
-        ram.read(self.addr)
+    pub fn read_data(&self, oam_mem: &mut Vec<Byte>) -> Byte {
+        oam_mem[self.addr.as_usize()]
     }
 }
