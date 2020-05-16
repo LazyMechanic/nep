@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use bitfield;
+use bitfield::*;
 
 bitfield! {
     #[derive(Default, Clone, Copy)]
@@ -16,9 +16,17 @@ bitfield! {
     pub bool, a,      set_a:      7; // 0b*000_0000
 }
 
-impl PpuMask {
+impl Joypad {
     pub fn new() -> Self {
         Self(0)
+    }
+
+    pub fn read(&self) -> Byte {
+        self.clone().into()
+    }
+
+    pub fn write(&mut self, v: Byte) {
+        *self = v.into();
     }
 }
 
