@@ -6,8 +6,8 @@ use lazy_static::lazy_static;
 
 #[derive(Debug, Clone)]
 pub struct OpCode {
-    pub inst:   Instruction,
-    pub mode:   AddressingMode,
+    pub inst: Instruction,
+    pub mode: AddressingMode,
     pub cycles: NumOfCycles,
 }
 
@@ -23,7 +23,7 @@ type A = AddressingMode;
 lazy_static! {
     pub static ref OPCODES: [OpCode; 256] =
     [
-        OpCode::new(/*0x00*/ I::BRK, A::IMM, 7),OpCode::new(/*0x01*/ I::ORA, A::IZX, 6),OpCode::new(/*0x02*/ I::XXX, A::IMP, 2),OpCode::new(/*0x03*/ I::XXX, A::IMP, 8),OpCode::new(/*0x04*/ I::NOP, A::IMP, 3),OpCode::new(/*0x05*/ I::ORA, A::ZP0, 3),OpCode::new(/*0x06*/ I::ASL, A::ZP0, 5),OpCode::new(/*0x07*/ I::XXX, A::IMP, 5),OpCode::new(/*0x08*/ I::PHP, A::IMP, 3),OpCode::new(/*0x09*/ I::ORA, A::IMM, 2),OpCode::new(/*0x0A*/ I::ASL, A::IMP, 2),OpCode::new(/*0x0B*/ I::XXX, A::IMP, 2),OpCode::new(/*0x0C*/ I::NOP, A::IMP, 4),OpCode::new(/*0x0D*/ I::ORA, A::ABS, 4),OpCode::new(/*0x0E*/ I::ASL, A::ABS, 6),OpCode::new(/*0x0F*/ I::XXX, A::IMP, 6),
+        OpCode::new(/*0x00*/ I::BRK, A::IMP, 7),OpCode::new(/*0x01*/ I::ORA, A::IZX, 6),OpCode::new(/*0x02*/ I::XXX, A::IMP, 2),OpCode::new(/*0x03*/ I::XXX, A::IMP, 8),OpCode::new(/*0x04*/ I::NOP, A::IMP, 3),OpCode::new(/*0x05*/ I::ORA, A::ZP0, 3),OpCode::new(/*0x06*/ I::ASL, A::ZP0, 5),OpCode::new(/*0x07*/ I::XXX, A::IMP, 5),OpCode::new(/*0x08*/ I::PHP, A::IMP, 3),OpCode::new(/*0x09*/ I::ORA, A::IMM, 2),OpCode::new(/*0x0A*/ I::ASL, A::IMP, 2),OpCode::new(/*0x0B*/ I::XXX, A::IMP, 2),OpCode::new(/*0x0C*/ I::NOP, A::IMP, 4),OpCode::new(/*0x0D*/ I::ORA, A::ABS, 4),OpCode::new(/*0x0E*/ I::ASL, A::ABS, 6),OpCode::new(/*0x0F*/ I::XXX, A::IMP, 6),
         OpCode::new(/*0x10*/ I::BPL, A::REL, 2),OpCode::new(/*0x11*/ I::ORA, A::IZY, 5),OpCode::new(/*0x12*/ I::XXX, A::IMP, 2),OpCode::new(/*0x13*/ I::XXX, A::IMP, 8),OpCode::new(/*0x14*/ I::NOP, A::IMP, 4),OpCode::new(/*0x15*/ I::ORA, A::ZPX, 4),OpCode::new(/*0x16*/ I::ASL, A::ZPX, 6),OpCode::new(/*0x17*/ I::XXX, A::IMP, 6),OpCode::new(/*0x18*/ I::CLC, A::IMP, 2),OpCode::new(/*0x19*/ I::ORA, A::ABY, 4),OpCode::new(/*0x1A*/ I::NOP, A::IMP, 2),OpCode::new(/*0x1B*/ I::XXX, A::IMP, 7),OpCode::new(/*0x1C*/ I::NOP, A::IMP, 4),OpCode::new(/*0x1D*/ I::ORA, A::ABX, 4),OpCode::new(/*0x1E*/ I::ASL, A::ABX, 7),OpCode::new(/*0x1F*/ I::XXX, A::IMP, 7),
         OpCode::new(/*0x20*/ I::JSR, A::ABS, 6),OpCode::new(/*0x21*/ I::AND, A::IZX, 6),OpCode::new(/*0x22*/ I::XXX, A::IMP, 2),OpCode::new(/*0x23*/ I::XXX, A::IMP, 8),OpCode::new(/*0x24*/ I::BIT, A::ZP0, 3),OpCode::new(/*0x25*/ I::AND, A::ZP0, 3),OpCode::new(/*0x26*/ I::ROL, A::ZP0, 5),OpCode::new(/*0x27*/ I::XXX, A::IMP, 5),OpCode::new(/*0x28*/ I::PLP, A::IMP, 4),OpCode::new(/*0x29*/ I::AND, A::IMM, 2),OpCode::new(/*0x2A*/ I::ROL, A::IMP, 2),OpCode::new(/*0x2B*/ I::XXX, A::IMP, 2),OpCode::new(/*0x2C*/ I::BIT, A::ABS, 4),OpCode::new(/*0x2D*/ I::AND, A::ABS, 4),OpCode::new(/*0x2E*/ I::ROL, A::ABS, 6),OpCode::new(/*0x2F*/ I::XXX, A::IMP, 6),
         OpCode::new(/*0x30*/ I::BMI, A::REL, 2),OpCode::new(/*0x31*/ I::AND, A::IZY, 5),OpCode::new(/*0x32*/ I::XXX, A::IMP, 2),OpCode::new(/*0x33*/ I::XXX, A::IMP, 8),OpCode::new(/*0x34*/ I::NOP, A::IMP, 4),OpCode::new(/*0x35*/ I::AND, A::ZPX, 4),OpCode::new(/*0x36*/ I::ROL, A::ZPX, 6),OpCode::new(/*0x37*/ I::XXX, A::IMP, 6),OpCode::new(/*0x38*/ I::SEC, A::IMP, 2),OpCode::new(/*0x39*/ I::AND, A::ABY, 4),OpCode::new(/*0x3A*/ I::NOP, A::IMP, 2),OpCode::new(/*0x3B*/ I::XXX, A::IMP, 7),OpCode::new(/*0x3C*/ I::NOP, A::IMP, 4),OpCode::new(/*0x3D*/ I::AND, A::ABX, 4),OpCode::new(/*0x3E*/ I::ROL, A::ABX, 7),OpCode::new(/*0x3F*/ I::XXX, A::IMP, 7),

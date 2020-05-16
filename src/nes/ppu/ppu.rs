@@ -14,7 +14,7 @@ impl Ppu {
     pub fn reset(&mut self) {}
 
     pub fn step(&mut self, cart: &mut Cartridge) {
-        todo!();
+        //todo!();
     }
 
     pub fn oam_mut(&mut self) -> &mut Oam {
@@ -22,18 +22,20 @@ impl Ppu {
     }
 
     pub fn read(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
-        unimplemented!()
+        //todo!();
+        Byte(0)
     }
 
     pub fn write(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
-        unimplemented!()
+        //todo!();
     }
 
     fn read_chr(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
-        unimplemented!()
+        //todo!();
+        Byte(0)
     }
 
     fn write_chr(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
-        unimplemented!()
+        //todo!();
     }
 }
