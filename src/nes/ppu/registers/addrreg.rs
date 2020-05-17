@@ -2,11 +2,42 @@ use crate::prelude::*;
 use bitfield::*;
 
 bitfield! {
-    #[derive(Default, Clone, Copy)]
+    #[derive(
+            Default,
+            Clone,
+            Copy,
+            derive_more::Display,
+            derive_more::Add,
+            derive_more::Sub,
+            derive_more::BitAnd,
+            derive_more::BitOr,
+            derive_more::BitXor,
+            derive_more::Mul,
+            derive_more::Div,
+            derive_more::Rem,
+            derive_more::Shr,
+            derive_more::Shl,
+            derive_more::Not,
+            derive_more::AddAssign,
+            derive_more::SubAssign,
+            derive_more::BitAndAssign,
+            derive_more::BitOrAssign,
+            derive_more::BitXorAssign,
+            derive_more::MulAssign,
+            derive_more::DivAssign,
+            derive_more::RemAssign,
+            derive_more::ShrAssign,
+            derive_more::ShlAssign,
+            PartialEq,
+            Eq,
+            PartialOrd,
+            Ord,
+            Hash,
+        )]
     pub struct AddrReg(u16);
     impl Debug;
-    // ================================================ 1111 11
-    // ================================== Bit position: 5432 1098 7654 3210
+    // =========================================================== 1111 11
+    // ============================================= Bit position: 5432 1098 7654 3210
     pub u16, coarse_x,    set_coarse_x:    4, 0;   // 0b0000_0000_000*_****
     pub u16, coarse_y,    set_coarse_y:    9, 5;   // 0b0000_00**_***0_0000
     pub u16, nametable_x, set_nametable_x: 10;     // 0b0000_0*00_0000_0000

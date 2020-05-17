@@ -2,6 +2,7 @@ use crate::prelude::*;
 
 const SIZE: usize = 256;
 
+#[derive(Debug, Clone, Copy)]
 pub struct OamEntry {
     pub y:    Byte, // Y position of sprite
     pub id:   Byte, // ID of tile from pattern memory
@@ -10,6 +11,15 @@ pub struct OamEntry {
 }
 
 impl OamEntry {
+    pub fn new() -> Self {
+        Self {
+            y:    Byte(0),
+            id:   Byte(0),
+            attr: Byte(0),
+            x:    Byte(0),
+        }
+    }
+
     pub fn from_bytes(v: &[Byte; 4]) -> Self {
         Self {
             y:    v[0],

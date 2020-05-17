@@ -17,6 +17,7 @@ macro_rules! math_type {
             derive_more::Rem,
             derive_more::Shr,
             derive_more::Shl,
+            derive_more::Not,
             derive_more::AddAssign,
             derive_more::SubAssign,
             derive_more::BitAndAssign,
