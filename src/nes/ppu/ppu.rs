@@ -39,7 +39,7 @@ pub struct Ppu {
     tram_addr: AddrReg, // Temporary store of information to be "transferred" into "pointer" at various times
 
     // Pixel offset horizontally
-    fine_x: u16,
+    fine_x: Addr,
 
     // Internal communications
     addr_latch:   u8,
@@ -95,7 +95,7 @@ impl Ppu {
             control: PpuCtrl::new(),
             vram_addr: AddrReg::new(),
             tram_addr: AddrReg::new(),
-            fine_x: 0,
+            fine_x: Addr(0),
             addr_latch: 0,
             ppu_data_buf: Byte(0),
             scanline: 0,
@@ -126,7 +126,7 @@ impl Ppu {
     }
 
     pub fn reset(&mut self) {
-        self.fine_x = 0;
+        self.fine_x = Addr(0);
         self.addr_latch = 0;
         self.ppu_data_buf = Byte(0);
         self.scanline = 0;
@@ -163,7 +163,14 @@ impl Ppu {
         match addr {
             Addr(0x0000) => self.control.into(),
             Addr(0x0001) => self.mask.into(),
-            Addr(0x0002) => self.status.into(),
+            Addr(0x0002) => {
+                let res = self.status.into();
+
+                self.status.set_vertical_blank(false);
+                self.addr_latch = 0;
+
+                res
+            }
             Addr(0x0003) => Byte(0),
             Addr(0x0004) => self.oam.read(self.oam_addr),
             Addr(0x0005) => Byte(0),
@@ -198,7 +205,67 @@ impl Ppu {
     }
 
     pub fn write(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
-        //todo!();
+        let addr = Self::normalize_addr(addr);
+        match addr {
+            Addr(0x0000) => {
+                self.control = v.into();
+                self.tram_addr.set_nametable_x(self.control.nametable_x());
+                self.tram_addr.set_nametable_y(self.control.nametable_y());
+            }
+            Addr(0x0001) => self.mask = v.into(),
+            Addr(0x0002) => {}
+            Addr(0x0003) => self.oam_addr = v.as_lo_addr(),
+            Addr(0x0004) => self.oam.write(self.oam_addr, v),
+            Addr(0x0005) => {
+                if self.addr_latch == 0 {
+                    // First write to scroll register contains X offset in pixel space
+                    // which we split into coarse and fine x values
+                    self.fine_x = (v & 0x07.into()).as_lo_addr();
+                    self.tram_addr.set_coarse_x((v >> 3).as_lo_addr());
+                    self.addr_latch = 1;
+                } else {
+                    // First write to scroll register contains Y offset in pixel space
+                    // which we split into coarse and fine Y values
+                    self.tram_addr.set_fine_y((v & 0x07.into()).as_lo_addr());
+                    self.tram_addr.set_coarse_x((v >> 3).as_lo_addr());
+                    self.addr_latch = 1;
+                }
+            }
+            Addr(0x0006) => {
+                if self.addr_latch == 0 {
+                    // PPU address bus can be accessed by CPU via the ADDR and DATA
+                    // registers. The fisrt write to this register latches the high byte
+                    // of the address, the second is the low byte. Note the writes
+                    // are stored in the tram register...
+                    self.tram_addr = ((v & 0x3F.into()).as_hi_addr()
+                        | Addr::from(self.tram_addr).lo_addr())
+                    .into();
+                    self.addr_latch = 1;
+                } else {
+                    // ...when a whole address has been written, the internal vram address
+                    // buffer is updated. Writing to the PPU is unwise during rendering
+                    // as the PPU will maintam the vram address automatically whilst
+                    // rendering the scanline position.
+                    self.tram_addr = (Addr::from(self.tram_addr).hi_addr() | v.as_lo_addr()).into();
+                    self.vram_addr = self.tram_addr;
+                    self.addr_latch = 1;
+                }
+            }
+            Addr(0x0007) => {
+                self.write_chr(cart, self.vram_addr.into(), v);
+                // All writes from PPU data automatically increment the nametable
+                // address depending upon the mode set in the control register.
+                // If set to vertical mode, the increment is 32, so it skips
+                // one whole nametable row; in horizontal mode it just increments
+                // by 1, moving to the next column
+                self.vram_addr += if self.control.increment_mode() {
+                    32.into()
+                } else {
+                    1.into()
+                };
+            }
+            _ => {}
+        };
     }
 
     fn read_chr(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
