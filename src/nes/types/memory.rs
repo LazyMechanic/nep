@@ -54,6 +54,12 @@ impl Byte {
     }
 }
 
+impl From<Byte> for i16 {
+    fn from(v: Byte) -> Self {
+        v.0 as i16
+    }
+}
+
 impl Word {
     pub fn lo(&self) -> Byte {
         let byte: Byte = ((self.0 & 0x00FF) as u8).into();
@@ -116,12 +122,12 @@ impl Addr {
     }
 
     pub fn lo_addr(&self) -> Addr {
-        let v: Addr = *self & 0x00FF.into();
+        let v: Addr = *self & Addr(0x00FF);
         v
     }
 
     pub fn hi_addr(&self) -> Addr {
-        let v: Addr = *self & 0xFF00.into();
+        let v: Addr = *self & Addr(0xFF00);
         v
     }
 
@@ -153,11 +159,11 @@ impl Addr {
     }
 
     pub fn with_hi_set() -> Addr {
-        0xFF00.into()
+        Addr(0xFF00)
     }
 
     pub fn with_lo_set() -> Addr {
-        0x00FF.into()
+        Addr(0x00FF)
     }
 
     pub fn inspect_bit(&self, bit_no: u16) -> bool {
@@ -171,6 +177,18 @@ impl Addr {
 impl ExtAddr {
     pub fn as_usize(&self) -> usize {
         self.0 as usize
+    }
+}
+
+impl From<Addr> for i16 {
+    fn from(v: Addr) -> Self {
+        v.0 as i16
+    }
+}
+
+impl From<i16> for Addr {
+    fn from(v: i16) -> Self {
+        Self(v as u16)
     }
 }
 

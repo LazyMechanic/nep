@@ -13,4 +13,5 @@ pub trait Mapper {
         false
     }
     fn clear_irq(&mut self) {}
+    fn scanline(&mut self) {}
 }

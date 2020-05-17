@@ -20,6 +20,70 @@ impl PpuCtrl {
     pub fn new() -> Self {
         Self(0)
     }
+
+    pub fn enable_nametable_x(&mut self) {
+        self.set_nametable_x(true);
+    }
+
+    pub fn enable_nametable_y(&mut self) {
+        self.set_nametable_y(true);
+    }
+
+    pub fn enable_increment_mode(&mut self) {
+        self.set_increment_mode(true);
+    }
+
+    pub fn enable_pattern_sprite(&mut self) {
+        self.set_pattern_sprite(true);
+    }
+
+    pub fn enable_pattern_background(&mut self) {
+        self.set_pattern_background(true);
+    }
+
+    pub fn enable_sprite_size(&mut self) {
+        self.set_sprite_size(true);
+    }
+
+    pub fn enable_slave_mode(&mut self) {
+        self.set_slave_mode(true);
+    }
+
+    pub fn enable_enable_nmi(&mut self) {
+        self.set_enable_nmi(true);
+    }
+
+    pub fn disable_nametable_x(&mut self) {
+        self.set_nametable_x(false);
+    }
+
+    pub fn disable_nametable_y(&mut self) {
+        self.set_nametable_y(false);
+    }
+
+    pub fn disable_increment_mode(&mut self) {
+        self.set_increment_mode(false);
+    }
+
+    pub fn disable_pattern_sprite(&mut self) {
+        self.set_pattern_sprite(false);
+    }
+
+    pub fn disable_pattern_background(&mut self) {
+        self.set_pattern_background(false);
+    }
+
+    pub fn disable_sprite_size(&mut self) {
+        self.set_sprite_size(false);
+    }
+
+    pub fn disable_slave_mode(&mut self) {
+        self.set_slave_mode(false);
+    }
+
+    pub fn disable_enable_nmi(&mut self) {
+        self.set_enable_nmi(false);
+    }
 }
 
 impl From<u8> for PpuCtrl {

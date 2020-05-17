@@ -16,6 +16,30 @@ impl PpuStatus {
     pub fn new() -> Self {
         Self(0)
     }
+
+    pub fn enable_vertical_blank(&mut self) {
+        self.set_vertical_blank(true);
+    }
+
+    pub fn enable_sprite_zero_hit(&mut self) {
+        self.set_sprite_zero_hit(true);
+    }
+
+    pub fn enable_sprite_overflow(&mut self) {
+        self.set_sprite_overflow(true);
+    }
+
+    pub fn disable_vertical_blank(&mut self) {
+        self.set_vertical_blank(false);
+    }
+
+    pub fn disable_sprite_zero_hit(&mut self) {
+        self.set_sprite_zero_hit(false);
+    }
+
+    pub fn disable_sprite_overflow(&mut self) {
+        self.set_sprite_overflow(false);
+    }
 }
 
 impl From<u8> for PpuStatus {

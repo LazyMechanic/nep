@@ -19,7 +19,7 @@ impl Ram {
         //   0b‭0001'1010'0001'0010‬ {0x1A12}
         // & 0b0000'0111'1111'1111 {0x07FF}
         // = 0b‭0000'0010'0001'0010‬ {0x0212}
-        let trunc_addr = addr & 0x07FF.into();
+        let trunc_addr = addr & Addr(0x07FF);
         self.mem[trunc_addr.as_usize()]
     }
 
@@ -28,7 +28,7 @@ impl Ram {
         //   0b‭0001'1010'0001'0010‬ {0x1A12}
         // & 0b0000'0111'1111'1111 {0x07FF}
         // = 0b‭0000'0010'0001'0010‬ {0x0212}
-        let trunc_addr = addr & 0x07FF.into();
+        let trunc_addr = addr & Addr(0x07FF);
         self.mem[trunc_addr.as_usize()] = v;
     }
 

@@ -6,14 +6,14 @@ use super::registers::Registers;
 use crate::prelude::*;
 
 pub struct Cpu {
-    regs: Registers,
+    regs:   Registers,
     cycles: u8,
 }
 
 impl Cpu {
     pub fn new() -> Self {
         Self {
-            regs: Registers::new(),
+            regs:   Registers::new(),
             cycles: 0,
         }
     }
@@ -30,7 +30,7 @@ impl Cpu {
     }
 
     fn push(&mut self, bus: &mut CpuBus, v: Byte) {
-        let addr = self.regs.sp().as_lo_addr() | 0x0100.into();
+        let addr = self.regs.sp().as_lo_addr() | Addr(0x0100);
         bus.write(addr, v);
         self.regs.dec_sp();
     }
@@ -63,7 +63,7 @@ impl Cpu {
             self.push(&mut bus, self.regs.status());
 
             // Read new program counter location from fixed address
-            let mut addr: Addr = 0xFFFE.into();
+            let mut addr: Addr = Addr(0xFFFE);
             let lo = bus.read(addr);
             let hi = bus.read(addr.inc());
 
@@ -92,7 +92,7 @@ impl Cpu {
         self.push(&mut bus, self.regs.status());
 
         // Read new program counter location from fixed address
-        let mut addr: Addr = 0xFFFA.into();
+        let mut addr: Addr = Addr(0xFFFA);
         let lo = bus.read(addr);
         let hi = bus.read(addr.inc());
 

@@ -31,3 +31,9 @@ impl BoolExt for bool {
         }
     }
 }
+
+impl From<bool> for Addr {
+    fn from(v: bool) -> Self {
+        v.as_addr()
+    }
+}

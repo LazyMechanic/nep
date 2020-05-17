@@ -20,23 +20,23 @@ pub struct Registers {
 impl Registers {
     pub fn new() -> Self {
         Self {
-            a:      0x00.into(),
-            x:      0x00.into(),
-            y:      0x00.into(),
-            sp:     0x00.into(),
-            pc:     0x00.into(),
+            a:      Byte(0x00),
+            x:      Byte(0x00),
+            y:      Byte(0x00),
+            sp:     Byte(0x00),
+            pc:     Addr(0x0000),
             status: StatusRegister::new(),
         }
     }
 
     pub fn reset(&mut self, mut cpu_bus: CpuBus) {
-        let a: Byte = 0x00.into();
-        let x: Byte = 0x00.into();
-        let y: Byte = 0x00.into();
-        let sp: Byte = 0xFD.into();
+        let a: Byte = Byte(0x00);
+        let x: Byte = Byte(0x00);
+        let y: Byte = Byte(0x00);
+        let sp: Byte = Byte(0xFD);
         let status = StatusRegister::new();
         let pc = {
-            let mut pc_addr_base = 0xFFFC.into();
+            let mut pc_addr_base = Addr(0xFFFC);
             let lo = cpu_bus.read(pc_addr_base);
             let hi = cpu_bus.read(pc_addr_base.inc());
             Addr::from_bytes(lo, hi)

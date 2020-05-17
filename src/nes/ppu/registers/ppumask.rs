@@ -20,6 +20,70 @@ impl PpuMask {
     pub fn new() -> Self {
         Self(0)
     }
+
+    pub fn enable_grayscale(&mut self) {
+        self.set_grayscale(true);
+    }
+
+    pub fn enable_render_background_left(&mut self) {
+        self.set_render_background_left(true);
+    }
+
+    pub fn enable_render_sprites_left(&mut self) {
+        self.set_render_sprites_left(true);
+    }
+
+    pub fn enable_render_background(&mut self) {
+        self.set_render_background(true);
+    }
+
+    pub fn enable_render_sprites(&mut self) {
+        self.set_render_sprites(true);
+    }
+
+    pub fn enable_enhance_red(&mut self) {
+        self.set_enhance_red(true);
+    }
+
+    pub fn enable_enhance_green(&mut self) {
+        self.set_enhance_green(true);
+    }
+
+    pub fn enable_enhance_blue(&mut self) {
+        self.set_enhance_blue(true);
+    }
+
+    pub fn disable_grayscale(&mut self) {
+        self.set_grayscale(false);
+    }
+
+    pub fn disable_render_background_left(&mut self) {
+        self.set_render_background_left(false);
+    }
+
+    pub fn disable_render_sprites_left(&mut self) {
+        self.set_render_sprites_left(false);
+    }
+
+    pub fn disable_render_background(&mut self) {
+        self.set_render_background(false);
+    }
+
+    pub fn disable_render_sprites(&mut self) {
+        self.set_render_sprites(false);
+    }
+
+    pub fn disable_enhance_red(&mut self) {
+        self.set_enhance_red(false);
+    }
+
+    pub fn disable_enhance_green(&mut self) {
+        self.set_enhance_green(false);
+    }
+
+    pub fn disable_enhance_blue(&mut self) {
+        self.set_enhance_blue(false);
+    }
 }
 
 impl From<u8> for PpuMask {

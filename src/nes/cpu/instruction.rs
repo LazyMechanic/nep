@@ -165,7 +165,7 @@ fn is_same_page(left: Addr, right: Addr) -> bool {
 }
 
 fn push(registers: &mut Registers, bus: &mut CpuBus, v: Byte) {
-    let addr = registers.sp().as_lo_addr() | 0x0100.into();
+    let addr = registers.sp().as_lo_addr() | Addr(0x0100);
     bus.write(addr, v);
     registers.dec_sp();
 }
@@ -183,7 +183,7 @@ fn push_status(registers: &mut Registers, bus: &mut CpuBus) {
 
 fn pop(registers: &mut Registers, bus: &mut CpuBus) -> Byte {
     registers.inc_sp();
-    let addr = registers.sp().as_lo_addr() | 0x0100.into();
+    let addr = registers.sp().as_lo_addr() | Addr(0x0100);
     bus.read(addr)
 }
 
@@ -521,7 +521,7 @@ fn brk(
     push_status(registers, bus);
     registers.set_break_mode(false);
 
-    let pc = bus.read(0xFFFE.into()).as_lo_addr() | bus.read(0xFFFF.into()).as_hi_addr();
+    let pc = bus.read(Addr(0xFFFE)).as_lo_addr() | bus.read(Addr(0xFFFF)).as_hi_addr();
     registers.set_pc(pc);
 
     (0, false)

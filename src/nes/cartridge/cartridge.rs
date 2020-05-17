@@ -364,6 +364,13 @@ impl Cartridge {
             _ => {}
         };
     }
+
+    pub fn scanline(&mut self) {
+        match self.mapper {
+            Some(ref mut m) => m.scanline(),
+            _ => {}
+        };
+    }
 }
 
 #[cfg(test)]

@@ -16,9 +16,9 @@ impl Dma {
         Self {
             has_request: false,
             wait_start:  true,
-            data:        0x00.into(),
-            page:        0x00.into(),
-            addr:        0x0000.into(),
+            data:        Byte(0x00),
+            page:        Addr(0x0000),
+            addr:        Addr(0x0000),
             cycles:      0,
         }
     }
@@ -38,9 +38,9 @@ impl Dma {
     fn reset(&mut self) {
         self.has_request = false;
         self.wait_start = true;
-        self.addr = 0x0000.into();
-        self.page = 0x0000.into();
-        self.data = 0x00.into();
+        self.addr = Addr(0x0000);
+        self.page = Addr(0x0000);
+        self.data = Byte(0x00);
         self.cycles = 0;
     }
 
@@ -61,7 +61,7 @@ impl Dma {
             self.addr.inc();
             self.cycles += 1;
 
-            if self.addr == 0x0000.into() {
+            if self.addr == Addr(0x0000) {
                 self.reset();
             }
         }

@@ -150,7 +150,7 @@ fn fetch_indirect_y(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bo
 fn fetch_relative(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
     let base = fetch_byte(registers, bus);
     if base.is_neg() {
-        (Operand::Addr(base.as_lo_addr() | 0xFF00.into()), false)
+        (Operand::Addr(base.as_lo_addr() | Addr(0xFF00)), false)
     } else {
         (Operand::Addr(base.as_lo_addr()), false)
     }

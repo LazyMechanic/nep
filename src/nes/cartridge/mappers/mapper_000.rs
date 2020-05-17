@@ -18,9 +18,9 @@ impl Mapper for Mapper000 {
         match addr {
             Addr(0x8000..=0xFFFF) => {
                 *mapped_addr = if self.prg_banks > 1 {
-                    (addr & 0x7FFF.into()).as_lo_ext_addr()
+                    (addr & Addr(0x7FFF)).as_lo_ext_addr()
                 } else {
-                    (addr & 0x3FFF.into()).as_lo_ext_addr()
+                    (addr & Addr(0x3FFF)).as_lo_ext_addr()
                 };
                 true
             }
@@ -40,9 +40,9 @@ impl Mapper for Mapper000 {
         match addr {
             Addr(0x8000..=0xFFFF) => {
                 *mapped_addr = if self.prg_banks > 1 {
-                    (addr & 0x7FFF.into()).as_lo_ext_addr()
+                    (addr & Addr(0x7FFF)).as_lo_ext_addr()
                 } else {
-                    (addr & 0x3FFF.into()).as_lo_ext_addr()
+                    (addr & Addr(0x3FFF)).as_lo_ext_addr()
                 };
                 true
             }
