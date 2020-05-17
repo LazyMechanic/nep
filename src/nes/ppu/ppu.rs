@@ -1,6 +1,6 @@
 use super::oam::{Oam, OamEntry};
 use super::registers::{AddrReg, PpuCtrl, PpuMask, PpuStatus};
-use crate::nes::cartridge::Cartridge;
+use crate::nes::cartridge::{Cartridge, Mirror};
 use crate::prelude::*;
 
 const TABLE_NAME_SIZE: usize = 1024;
@@ -123,6 +123,24 @@ impl Ppu {
 
     fn normalize_addr(addr: Addr) -> Addr {
         addr & 0x0007.into()
+    }
+
+    fn normalize_addr_chr(addr: Addr) -> Addr {
+        addr & 0x3FFF.into()
+    }
+
+    fn normalize_addr_pattern(addr: Addr) -> (Addr, Addr) {
+        let table_num = (addr & 0x1000.into()) >> 12;
+        let cell = addr & 0x0FFF.into();
+        (table_num, cell)
+    }
+
+    fn normalize_addr_name(addr: Addr) -> Addr {
+        addr & 0x0FFF.into()
+    }
+
+    fn normalize_addr_palette(addr: Addr) -> Addr {
+        addr & 0x001F.into()
     }
 
     pub fn reset(&mut self) {
@@ -269,11 +287,108 @@ impl Ppu {
     }
 
     fn read_chr(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
-        //todo!();
-        Byte(0)
+        let addr = Self::normalize_addr_chr(addr);
+        match addr {
+            Addr(0x0000..=0x1FFF) => {
+                let (v, mapped) = cart.read_chr(addr);
+                if mapped {
+                    v
+                } else {
+                    // If the cartridge cant map the address, have
+                    // a physical location ready here
+                    let (table_num, cell) = Self::normalize_addr_pattern(addr);
+                    self.tbl_pattern[table_num.as_usize()][cell.as_usize()]
+                }
+            }
+            Addr(0x2000..=0x3EFF) => {
+                let addr = Self::normalize_addr_name(addr);
+                let tbl_addr = addr & 0x03FF.into();
+                match cart.mirror() {
+                    Mirror::Horizontal => match addr {
+                        Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()],
+                        Addr(0x0400..=0x07FF) => self.tbl_name[1][tbl_addr.as_usize()],
+                        Addr(0x0800..=0x0BFF) => self.tbl_name[0][tbl_addr.as_usize()],
+                        Addr(0x0C00..=0x0FFF) => self.tbl_name[1][tbl_addr.as_usize()],
+                        _ => Byte(0),
+                    },
+                    Mirror::Vertical => match addr {
+                        Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()],
+                        Addr(0x0400..=0x07FF) => self.tbl_name[0][tbl_addr.as_usize()],
+                        Addr(0x0800..=0x0BFF) => self.tbl_name[1][tbl_addr.as_usize()],
+                        Addr(0x0C00..=0x0FFF) => self.tbl_name[1][tbl_addr.as_usize()],
+                        _ => Byte(0),
+                    },
+                    _ => Byte(0),
+                }
+            }
+            Addr(0x3F00..=0x3FFF) => {
+                let mut addr = Self::normalize_addr_palette(addr);
+                addr = match addr {
+                    Addr(0x0010) => Addr(0x0000),
+                    Addr(0x0014) => Addr(0x0004),
+                    Addr(0x0018) => Addr(0x0008),
+                    Addr(0x001C) => Addr(0x000C),
+                    _ => addr,
+                };
+
+                let res = self.tbl_palette[addr.as_usize()]
+                    & if self.mask.grayscale() {
+                        0x30.into()
+                    } else {
+                        0x3F.into()
+                    };
+                res
+            }
+            _ => Byte(0),
+        }
     }
 
     fn write_chr(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
-        //todo!();
+        let addr = Self::normalize_addr_chr(addr);
+        match addr {
+            Addr(0x0000..=0x1FFF) => {
+                let mapped = cart.write_chr(addr, v);
+                if mapped {
+                    // Do nothing
+                } else {
+                    let (table_num, cell) = Self::normalize_addr_pattern(addr);
+                    self.tbl_pattern[table_num.as_usize()][cell.as_usize()] = v;
+                }
+            }
+            Addr(0x2000..=0x3EFF) => {
+                let addr = Self::normalize_addr_name(addr);
+                let tbl_addr = addr & 0x03FF.into();
+                match cart.mirror() {
+                    Mirror::Horizontal => match addr {
+                        Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
+                        Addr(0x0400..=0x07FF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
+                        Addr(0x0800..=0x0BFF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
+                        Addr(0x0C00..=0x0FFF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
+                        _ => {}
+                    },
+                    Mirror::Vertical => match addr {
+                        Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
+                        Addr(0x0400..=0x07FF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
+                        Addr(0x0800..=0x0BFF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
+                        Addr(0x0C00..=0x0FFF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
+                        _ => {}
+                    },
+                    _ => {}
+                }
+            }
+            Addr(0x3F00..=0x3FFF) => {
+                let mut addr = Self::normalize_addr_palette(addr);
+                addr = match addr {
+                    Addr(0x0010) => Addr(0x0000),
+                    Addr(0x0014) => Addr(0x0004),
+                    Addr(0x0018) => Addr(0x0008),
+                    Addr(0x001C) => Addr(0x000C),
+                    _ => addr,
+                };
+
+                self.tbl_palette[addr.as_usize()] = v;
+            }
+            _ => {}
+        }
     }
 }

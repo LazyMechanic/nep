@@ -20,8 +20,8 @@ pub enum Mirror {
 pub struct Cartridge {
     prg_mem: Vec<Byte>,
     chr_mem: Vec<Byte>,
-    mirror: Mirror,
-    mapper: Option<Box<dyn Mapper>>,
+    mirror:  Mirror,
+    mapper:  Option<Box<dyn Mapper>>,
 }
 
 const PROGRAM_ROM_SIZE: usize = 16384; // 16 kb
@@ -35,8 +35,8 @@ impl Cartridge {
         Self {
             prg_mem: vec![Byte(0); 0],
             chr_mem: vec![Byte(0); 0],
-            mirror: Mirror::Hardware,
-            mapper: None,
+            mirror:  Mirror::Hardware,
+            mapper:  None,
         }
     }
 
@@ -302,35 +302,41 @@ impl Cartridge {
         }
     }
 
-    pub fn read_chr(&mut self, addr: Addr) -> Byte {
+    pub fn read_chr(&mut self, addr: Addr) -> (Byte, bool) {
         let mut mapped_addr = ExtAddr(0xFFFF_FFFF);
-        let mut value = Byte(0);
+        let mut v = Byte(0x00);
+        let mut mapped = false;
 
         match self.mapper {
             Some(ref mut m) => {
                 if m.map_read_chr(addr, &mut mapped_addr) {
                     // Mapper has produced an offset into cartridge bank memory
-                    value = self.chr_mem[mapped_addr.as_usize()]
+                    v = self.chr_mem[mapped_addr.as_usize()];
+                    mapped = true;
                 }
             }
             _ => {}
         };
 
-        value
+        (v, mapped)
     }
 
-    pub fn write_chr(&mut self, addr: Addr, v: Byte) {
+    pub fn write_chr(&mut self, addr: Addr, v: Byte) -> bool {
         let mut mapped_addr = ExtAddr(0xFFFF_FFFF);
+        let mut mapped = false;
 
         match self.mapper {
             Some(ref mut m) => {
                 if m.map_write_chr(addr, &mut mapped_addr) {
                     // Mapper has produced an offset into cartridge bank memory
                     self.chr_mem[mapped_addr.as_usize()] = v;
+                    mapped = true;
                 }
             }
             _ => {}
         }
+
+        mapped
     }
 
     pub fn mirror(&self) -> Mirror {
