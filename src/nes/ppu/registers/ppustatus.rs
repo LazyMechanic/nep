@@ -7,9 +7,9 @@ bitfield! {
     impl Debug;
     // ====================================== Bit position: 7654 3210
     // UNUSED                                          // 0b000*_****
-    pub bool, vertical_blank,  set_vertical_blank:  5; // 0b00*0_0000
+    pub bool, sprite_overflow, set_sprite_overflow: 5; // 0b00*0_0000
     pub bool, sprite_zero_hit, set_sprite_zero_hit: 6; // 0b0*00_0000
-    pub bool, sprite_overflow, set_sprite_overflow: 7; // 0b*000_0000
+    pub bool, vertical_blank,  set_vertical_blank:  7; // 0b*000_0000
 }
 
 impl PpuStatus {

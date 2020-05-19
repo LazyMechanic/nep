@@ -47,6 +47,17 @@ impl Cartridge {
     }
 
     pub fn load<F: Read + Seek>(&mut self, file: &mut F) -> Result<()> {
+        let old_pos = file.seek(SeekFrom::Current(0)).context(errors::ReadFile)?;
+        let len = file.seek(SeekFrom::End(0)).context(errors::ReadFile)?;
+
+        // Avoid seeking a third time when we were already at the end of the
+        // stream. The branch is usually way cheaper than a seek operation.
+        if old_pos != len {
+            file.seek(SeekFrom::Start(old_pos))
+                .context(errors::ReadFile)?;
+        }
+
+        println!("[CARTGE] cartridge size (bytes): {}", len);
         // iNES header format (16 bytes):
         // 0-3: Constant $4E $45 $53 $1A ("NES" followed by MS-DOS end-of-file)
         // 4: Size of PRG ROM in 16 KB units

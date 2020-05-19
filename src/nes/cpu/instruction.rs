@@ -77,6 +77,8 @@ pub fn exec_instruction(
     /*          additional cycles*/ NumOfCycles,
     /*need add cycle by addr mode*/ bool,
 ) {
+    // println!("opcode: {:?}", opcode);
+    // println!("operand: {:?}", operand);
     let result = match opcode.inst {
         Instruction::XXX => xxx(&opcode.mode, registers, bus, operand),
         Instruction::ADC => adc(&opcode.mode, registers, bus, operand),
@@ -197,6 +199,7 @@ fn pop_pc(registers: &mut Registers, bus: &mut CpuBus) {
 fn pop_status(registers: &mut Registers, bus: &mut CpuBus) {
     let status = pop(registers, bus);
     registers.set_status(status);
+    registers.set_reserved(true);
 }
 
 // Instruction: Add with Carry In
@@ -266,19 +269,18 @@ fn adc(
     bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
-    let fetched = unwrap_operand(bus, operand);
-    let acc = registers.a();
-    let carry = registers.carry();
+    let fetched = unwrap_operand(bus, operand).as_lo_word();
+    let acc = registers.a().as_lo_word();
+    let carry = registers.carry().as_word();
 
-    let res = fetched.as_lo_word() + acc.as_lo_word() + carry.as_word();
-    let overflow = !((acc ^ fetched) & 0x80.into() != 0x00.into())
-        && ((acc ^ res.lo()) & 0x80.into() != 0x00.into());
+    let res = fetched + acc + carry;
+    let overflow = (!(acc ^ fetched) & (acc ^ res)) & Word(0x0080) != Word(0x0000);
 
     registers
         .set_overflow(overflow)
         .update_negative_by(res.lo())
         .update_zero_by(res.lo())
-        .set_carry(res > 0x00FF.into())
+        .set_carry(res > Word(0x00FF))
         .set_a(res.lo());
 
     (0, true)
@@ -327,7 +329,7 @@ fn asl(
     let res = fetched.as_lo_word() << 1;
 
     registers
-        .set_carry(res.hi() > 0x00.into())
+        .set_carry(res.hi() > Byte(0x00))
         .update_zero_by(res.lo())
         .update_negative_by(res.lo());
 
@@ -423,10 +425,11 @@ fn bit(
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let acc = registers.a();
+    let res = fetched & acc;
 
     registers
         .update_negative_by(fetched)
-        .update_zero_by(fetched & acc)
+        .update_zero_by(res)
         .set_overflow(fetched.inspect_bit(6));
 
     (0, false)
@@ -456,6 +459,8 @@ fn bmi(
     }
 }
 
+// Instruction: Branch if Not Equal
+// Function:    if(Z == 0) pc = address
 fn bne(
     mode: &AddressingMode,
     registers: &mut Registers,
@@ -510,18 +515,18 @@ fn brk(
     bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
-    operand.unwrap_none();
-
     registers.inc_pc();
-    registers.set_interrupt(true);
 
+    registers.set_interrupt(true);
     push_pc(registers, bus);
 
     registers.set_break_mode(true);
     push_status(registers, bus);
     registers.set_break_mode(false);
 
-    let pc = bus.read(Addr(0xFFFE)).as_lo_addr() | bus.read(Addr(0xFFFF)).as_hi_addr();
+    let lo = bus.read(Addr(0xFFFE));
+    let hi = bus.read(Addr(0xFFFF));
+    let pc = Addr::from_bytes(lo, hi);
     registers.set_pc(pc);
 
     (0, false)
@@ -634,7 +639,7 @@ fn cmp(
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let reg = registers.a();
-    let res = reg.as_lo_word() - fetched.as_lo_word();
+    let res = reg.as_lo_word().overflowing_sub(fetched.as_lo_word());
 
     registers
         .set_carry(reg >= fetched)
@@ -655,7 +660,7 @@ fn cpx(
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let reg = registers.x();
-    let res = reg.as_lo_word() - fetched.as_lo_word();
+    let res = reg.as_lo_word().overflowing_sub(fetched.as_lo_word());
 
     registers
         .set_carry(reg >= fetched)
@@ -676,7 +681,7 @@ fn cpy(
 ) -> (NumOfCycles, bool) {
     let fetched = unwrap_operand(bus, operand);
     let reg = registers.y();
-    let res = reg.as_lo_word() - fetched.as_lo_word();
+    let res = reg.as_lo_word().overflowing_sub(fetched.as_lo_word());
 
     registers
         .set_carry(reg >= fetched)
@@ -842,6 +847,7 @@ fn jsr(
 
     registers.dec_pc();
     push_pc(registers, bus);
+
     registers.set_pc(addr);
 
     (0, false)
@@ -911,9 +917,13 @@ fn lsr(
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
+    let carry = fetched.inspect_bit(0);
     let res = fetched >> 1;
 
-    registers.update_zero_by(res).update_negative_by(res);
+    registers
+        .set_carry(carry)
+        .update_zero_by(res)
+        .update_negative_by(res);
 
     match mode {
         AddressingMode::IMP => {
@@ -1028,10 +1038,11 @@ fn rol(
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
-    let res = (fetched.as_lo_word() << 1) | registers.carry().as_word();
+    let carry = registers.carry();
+    let res = (fetched.as_lo_word() << 1) | carry.as_word();
 
     registers
-        .set_carry(res.hi() != 0x00.into())
+        .set_carry(res.hi() != Byte(0x00))
         .update_zero_by(res.lo())
         .update_negative_by(res.lo());
 
@@ -1054,10 +1065,11 @@ fn ror(
     operand: Operand,
 ) -> (NumOfCycles, bool) {
     let (fetched, addr) = unwrap_operand_with_addr(bus, operand);
-    let res = (fetched.as_lo_word() >> 1) | (registers.carry().as_word() << 7);
+    let carry = registers.carry();
+    let res = (fetched.as_lo_word() >> 1) | (carry.as_word() << 7);
 
     registers
-        .set_carry(res.hi() != 0x00.into())
+        .set_carry(res.hi() != Byte(0x00))
         .update_zero_by(res.lo())
         .update_negative_by(res.lo());
 
@@ -1130,17 +1142,17 @@ fn sbc(
     bus: &mut CpuBus,
     operand: Operand,
 ) -> (NumOfCycles, bool) {
-    let fetched = unwrap_operand(bus, operand);
-    let acc = registers.a();
+    let fetched = unwrap_operand(bus, operand).as_lo_word();
+    let acc = registers.a().as_lo_word();
+    let carry = registers.carry().as_word();
     // We can invert the bottom 8 bits with bitwise xor
-    let val = fetched ^ 0xFF.into();
-    let res = acc.as_lo_word() + val.as_lo_word() + registers.carry().as_word();
+    let val = fetched ^ Word(0x00FF);
+    let res = acc + val + carry;
     // Magic....
-    let overflow =
-        (res ^ acc.as_lo_word()) & (res ^ val.as_lo_word() & 0x0080.into()) != 0x0000.into();
+    let overflow = (res ^ acc) & (res ^ val) & Word(0x0080) != Word(0x0000);
 
     registers
-        .set_carry(res.hi() != 0x00.into())
+        .set_carry(res.hi() != Byte(0x00))
         .set_overflow(overflow)
         .update_zero_by(res.lo())
         .update_negative_by(res.lo())

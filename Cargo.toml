@@ -21,3 +21,6 @@ bitfield = "0.13.2"
 [dependencies.snafu]
 version = "0.6.6"
 features = ["backtraces-impl-backtrace-crate"]
+
+[profile.release]
+lto = true

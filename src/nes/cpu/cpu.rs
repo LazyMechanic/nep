@@ -116,7 +116,8 @@ impl Cpu {
         // the next one is ready to be executed.
         if self.cycles == 0 {
             let code = addressing::fetch_instruction_code(&mut self.regs, &mut bus);
-
+            // println!("pc: {:#06X}", self.regs.pc);
+            // println!("inst: {}", code);
             // Always set the unused status flag bit to 1
             self.regs.set_reserved(true);
 
@@ -131,6 +132,17 @@ impl Cpu {
 
             let (additional_cycle, inst_need_add) =
                 instruction::exec_instruction(&opcode, &mut self.regs, &mut bus, operand);
+
+            println!("inst: {:?} | operand: {:?}", opcode.inst, operand);
+            println!(
+                "x: {} | y: {} | a: {} | sp: {} | pc: {} | status: {}",
+                self.regs.x,
+                self.regs.y,
+                self.regs.a,
+                self.regs.sp,
+                self.regs.pc,
+                self.regs.status.0
+            );
 
             self.cycles += additional_cycle;
 

@@ -2,7 +2,10 @@ use std::env;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::pixels::Color;
+use sdl2::rect::Point;
 use sdl2::render::WindowCanvas;
+use sdl2::video::SwapInterval;
 use sdl2::Sdl;
 
 use nep::prelude::*;
@@ -10,6 +13,7 @@ use nep::Emu;
 
 use super::consts;
 
+use std::convert::TryInto;
 use std::io::{Read, Seek};
 use std::path::Path;
 
@@ -37,11 +41,13 @@ impl App {
     pub fn new() -> Self {
         let sdl_context = sdl2::init().unwrap();
         let video_subsystem = sdl_context.video().unwrap();
+        video_subsystem.gl_set_swap_interval(SwapInterval::Immediate);
         let window = video_subsystem
             .window(consts::WINDOW_TITLE, consts::WIDTH, consts::HEIGHT)
             .position_centered()
             .build()
             .unwrap();
+
         let canvas = window.into_canvas().build().unwrap();
 
         App {
@@ -59,6 +65,23 @@ impl App {
     pub fn load_from_file<P: AsRef<Path>>(&mut self, file_path: P) -> Result<()> {
         self.emu.load_from_file(file_path)?;
         Ok(())
+    }
+
+    pub fn render(&mut self) {
+        self.canvas.clear();
+
+        let screen = self.emu.screen();
+        //if screen.ready {
+        for p in screen.pixels().iter() {
+            let color = Color::RGB(p.color.r.into(), p.color.g.into(), p.color.b.into());
+            let point = Point::new(p.x as i32, p.y as i32);
+            //println!("{:?}", color);
+            self.canvas.set_draw_color(color);
+            self.canvas.draw_point(point);
+        }
+        //}
+
+        self.canvas.present();
     }
 
     pub fn run(&mut self) {
@@ -88,9 +111,9 @@ impl App {
                 }
             }
 
-            self.emu.step(joy_1_state, joy_2_state);
-            // TODO: do render
-            self.canvas.present();
+            self.emu.update_joypads(joy_1_state, joy_2_state);
+            self.emu.step();
+            self.render();
         }
     }
 }

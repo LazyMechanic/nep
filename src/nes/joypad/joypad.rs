@@ -2,8 +2,42 @@ use crate::prelude::*;
 use bitfield::*;
 
 bitfield! {
-    #[derive(Default, Clone, Copy)]
-    pub struct Joypad(u8);
+    #[derive(
+            Default,
+            Clone,
+            Copy,
+            derive_more::Display,
+            derive_more::Add,
+            derive_more::Sub,
+            derive_more::BitAnd,
+            derive_more::BitOr,
+            derive_more::BitXor,
+            derive_more::Mul,
+            derive_more::Div,
+            derive_more::Rem,
+            derive_more::Shr,
+            derive_more::Shl,
+            derive_more::Not,
+            derive_more::AddAssign,
+            derive_more::SubAssign,
+            derive_more::BitAndAssign,
+            derive_more::BitOrAssign,
+            derive_more::BitXorAssign,
+            derive_more::MulAssign,
+            derive_more::DivAssign,
+            derive_more::RemAssign,
+            derive_more::ShrAssign,
+            derive_more::ShlAssign,
+            derive_more::From,
+            derive_more::FromStr,
+            derive_more::Into,
+            PartialEq,
+            Eq,
+            PartialOrd,
+            Ord,
+            Hash,
+        )]
+    pub struct JoypadState(u8);
     impl Debug;
     // ==================== Bit position: 7654 3210
     pub bool, right,  set_right:  0; // 0b0000_000*
@@ -16,40 +50,38 @@ bitfield! {
     pub bool, a,      set_a:      7; // 0b*000_0000
 }
 
+impl JoypadState {
+    pub fn get_and_shift(&mut self) -> Byte {
+        let int_res = self.0 & 0x01;
+        self.0 >>= 1;
+        Byte(int_res)
+    }
+}
+
+pub struct Joypad {
+    state: JoypadState,
+    reg:   JoypadState,
+}
+
 impl Joypad {
     pub fn new() -> Self {
-        Self(0)
+        Self {
+            state: Default::default(),
+            reg:   Default::default(),
+        }
     }
 
-    pub fn read(&self) -> Byte {
-        self.clone().into()
+    pub fn update(&mut self, state: JoypadState) {
+        self.state = state;
+    }
+
+    pub fn read(&mut self) -> Byte {
+        self.reg.get_and_shift()
     }
 
     pub fn write(&mut self, v: Byte) {
-        *self = v.into();
-    }
-}
-
-impl From<u8> for Joypad {
-    fn from(v: u8) -> Self {
-        Self(v)
-    }
-}
-
-impl From<Joypad> for u8 {
-    fn from(v: Joypad) -> Self {
-        v.0
-    }
-}
-
-impl From<Byte> for Joypad {
-    fn from(v: Byte) -> Self {
-        Self(v.into())
-    }
-}
-
-impl From<Joypad> for Byte {
-    fn from(v: Joypad) -> Self {
-        Self(v.0)
+        if v & Byte(0x01) != Byte(0x00) {
+            self.reg = self.state
+        }
     }
 }

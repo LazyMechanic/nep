@@ -55,12 +55,22 @@ macro_rules! math_type {
 
         impl $name {
             pub fn inc(&mut self) -> Self {
-                self.0.overflowing_add(1);
+                self.0 = self.0.overflowing_add(1).0;
                 *self
             }
 
             pub fn dec(&mut self) -> Self {
-                self.0.overflowing_sub(1);
+                self.0 = self.0.overflowing_sub(1).0;
+                *self
+            }
+
+            pub fn overflowing_add(&mut self, op: $name) -> Self {
+                self.0 = self.0.overflowing_add(op.0).0;
+                *self
+            }
+
+            pub fn overflowing_sub(&mut self, op: $name) -> Self {
+                self.0 = self.0.overflowing_sub(op.0).0;
                 *self
             }
         }

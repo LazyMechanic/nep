@@ -1,5 +1,9 @@
+use super::color::Color;
+use super::color::COLORS;
 use super::oam::{Oam, OamEntry};
+use super::pixel::Pixel;
 use super::registers::{AddrReg, PpuCtrl, PpuMask, PpuStatus};
+use super::screen::Screen;
 use crate::nes::cartridge::{Cartridge, Mirror};
 use crate::prelude::*;
 
@@ -10,6 +14,9 @@ const TABLE_PATTERN_SIZE: usize = 4096;
 const TABLE_PATTERN_COUNT: usize = 2;
 
 const TABLE_PALETTE_SIZE: usize = 32;
+
+const SCREEN_WIDTH: usize = 256;
+const SCREEN_HEIGHT: usize = 240;
 
 // Address range Size   Description
 // --------------------------------------------
@@ -82,6 +89,8 @@ pub struct Ppu {
     sprite_zero_being_rendered: bool,
 
     nmi: bool,
+
+    screen: Screen,
 }
 
 impl Ppu {
@@ -118,6 +127,7 @@ impl Ppu {
             sprite_zero_hit_possible: false,
             sprite_zero_being_rendered: false,
             nmi: false,
+            screen: Screen::with_size(SCREEN_WIDTH, SCREEN_HEIGHT),
         }
     }
 
@@ -170,6 +180,10 @@ impl Ppu {
 
     pub fn clear_nmi(&mut self) {
         self.nmi = false;
+    }
+
+    pub fn screen(&self) -> &Screen {
+        &self.screen
     }
 
     pub fn read(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
@@ -341,15 +355,16 @@ impl Ppu {
 
     fn write_chr(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
         let addr = Self::normalize_addr_chr(addr);
+
+        let mapped = cart.write_chr(addr, v);
+        if mapped {
+            return;
+        }
+
         match addr {
             Addr(0x0000..=0x1FFF) => {
-                let mapped = cart.write_chr(addr, v);
-                if mapped {
-                    // Do nothing
-                } else {
-                    let (table_num, cell) = Self::normalize_addr_pattern(addr);
-                    self.tbl_pattern[table_num.as_usize()][cell.as_usize()] = v;
-                }
+                let (table_num, cell) = Self::normalize_addr_pattern(addr);
+                self.tbl_pattern[table_num.as_usize()][cell.as_usize()] = v;
             }
             Addr(0x2000..=0x3EFF) => {
                 let addr = Self::normalize_addr_name(addr);
@@ -386,6 +401,27 @@ impl Ppu {
             }
             _ => {}
         }
+    }
+
+    fn get_color_from_palette(
+        &mut self,
+        cart: &mut Cartridge,
+        palette: Addr,
+        pixel: Addr,
+    ) -> Color {
+        // This is a convenience function that takes a specified palette and pixel
+        // index and returns the appropriate screen colour.
+        // "0x3F00"       - Offset into PPU addressable range where palettes are stored
+        // "palette << 2" - Each palette is 4 bytes in size
+        // "pixel"        - Each pixel index is either 0, 1, 2 or 3
+        // "& 0x3F"       - Stops us reading beyond the bounds of the palScreen array
+        //println!("palette: {} | pixel: {}", palette, pixel);
+        let addr1 = self.read_chr(cart, Addr(0x3F00) + (palette << 2) + pixel);
+        let addr = addr1.as_lo_addr().as_usize() & 0x3F;
+        COLORS[addr]
+
+        // Note: We dont access tblPalette directly here, instead we know that ppuRead()
+        // will map the address onto the seperate small RAM attached to the PPU bus.
     }
 
     // ==============================================================================
@@ -558,6 +594,10 @@ impl Ppu {
         // a state machine going through the motions of fetching background
         // information and sprite information, compositing them into a pixel
         // to be output.
+
+        if self.screen.ready {
+            self.screen.ready = false;
+        }
 
         // The lambda functions (functions inside functions) contain the various
         // actions to be performed depending upon the output of the state machine
@@ -811,10 +851,10 @@ impl Ppu {
                 // Firstly, clear out the sprite memory. This memory is used to store the
                 // sprites to be rendered. It is not the OAM.
                 for i in self.sprite_scan_line.iter_mut() {
-                    i.x = 0x00.into();
                     i.y = 0x00.into();
                     i.id = 0x00.into();
                     i.attr = 0x00.into();
+                    i.x = 0x00.into();
                 }
 
                 // The NES supports a maximum number of sprites per scanline. Nominally
@@ -1156,7 +1196,17 @@ impl Ppu {
 
         // Now we have a final pixel colour, and a palette for this cycle
         // of the current scanline. Let's at long last, draw that ^&%*er :P
-        //sprScreen.SetPixel(cycle - 1, scanline, GetColourFromPaletteRam(palette, pixel));
+        if palette != Addr(0) || pixel != Addr(0) {
+            //println!("AAAAAAAAAAAAAAAAAAA")
+        }
+
+        let color = self.get_color_from_palette(cart, palette, pixel);
+        let pixel_to_screen = Pixel::new(color, (self.cycle - 1) as usize, self.scanline as usize);
+        self.screen.set_pixel(
+            (self.cycle - 1) as usize,
+            self.scanline as usize,
+            pixel_to_screen,
+        );
 
         // Advance renderer - it never stops, it's relentless
         self.cycle += 1;
@@ -1171,7 +1221,7 @@ impl Ppu {
             self.scanline += 1;
             if self.scanline >= 261 {
                 self.scanline = -1;
-                //self.frame_complete = true;
+                self.screen.ready = true;
                 self.odd_frame = !self.odd_frame;
             }
         }
