@@ -1069,7 +1069,7 @@ fn ror(
     let res = (fetched.as_lo_word() >> 1) | (carry.as_word() << 7);
 
     registers
-        .set_carry(res.hi() != Byte(0x00))
+        .set_carry(fetched != Byte(0x00))
         .update_zero_by(res.lo())
         .update_negative_by(res.lo());
 
