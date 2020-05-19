@@ -132,8 +132,8 @@ fn fetch_indirect_x(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bo
         .as_lo_addr()
         .overflowing_add(registers.x().as_lo_addr());
 
-    let lo = bus.read(base);
-    let hi = bus.read(base.inc());
+    let lo = bus.read(base.lo_addr());
+    let hi = bus.read(base.inc().lo_addr());
 
     let addr = Addr::from_bytes(lo, hi);
 
@@ -141,10 +141,10 @@ fn fetch_indirect_x(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bo
 }
 
 fn fetch_indirect_y(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
-    let mut base = fetch_byte(registers, bus).as_lo_addr();
+    let mut base = fetch_byte(registers, bus);
 
-    let lo = bus.read(base);
-    let hi = bus.read(base.inc());
+    let lo = bus.read(base.as_lo_addr());
+    let hi = bus.read(base.inc().as_lo_addr());
 
     let addr = Addr::from_bytes(lo, hi).overflowing_add(registers.y().as_lo_addr());
 

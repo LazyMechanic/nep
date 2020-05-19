@@ -8,7 +8,7 @@ pub struct Dma {
     data:        Byte,
     page:        Addr,
     addr:        Addr,
-    cycles:      u16,
+    cycles:      u32,
 }
 
 impl Dma {
@@ -58,10 +58,10 @@ impl Dma {
             // Write to OAM
             // On odd clock cycles, write to PPU OAM
             oam.write(self.addr, self.data);
-            self.addr.inc();
             self.cycles += 1;
+            self.addr.inc();
 
-            if self.addr == Addr(0x0000) {
+            if self.addr & Addr(0x00FF) == Addr(0x0000) {
                 self.reset();
             }
         }

@@ -116,8 +116,7 @@ impl Cpu {
         // the next one is ready to be executed.
         if self.cycles == 0 {
             let code = addressing::fetch_instruction_code(&mut self.regs, &mut bus);
-            // println!("pc: {:#06X}", self.regs.pc);
-            // println!("inst: {}", code);
+
             // Always set the unused status flag bit to 1
             self.regs.set_reserved(true);
 

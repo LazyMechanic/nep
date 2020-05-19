@@ -298,17 +298,18 @@ impl Ppu {
 
     fn read_chr(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
         let addr = Self::normalize_addr_chr(addr);
-        let (v, mapped) = cart.read_chr(addr);
-        if mapped {
-            return v;
-        }
 
         match addr {
             Addr(0x0000..=0x1FFF) => {
-                // If the cartridge cant map the address, have
-                // a physical location ready here
-                let (table_num, cell) = Self::normalize_addr_pattern(addr);
-                self.tbl_pattern[table_num.as_usize()][cell.as_usize()]
+                let (v, mapped) = cart.read_chr(addr);
+                if mapped {
+                    v
+                } else {
+                    // If the cartridge cant map the address, have
+                    // a physical location ready here
+                    let (table_num, cell) = Self::normalize_addr_pattern(addr);
+                    self.tbl_pattern[table_num.as_usize()][cell.as_usize()]
+                }
             }
             Addr(0x2000..=0x3EFF) => {
                 let addr = Self::normalize_addr_name(addr);
@@ -356,15 +357,15 @@ impl Ppu {
     fn write_chr(&mut self, cart: &mut Cartridge, addr: Addr, v: Byte) {
         let addr = Self::normalize_addr_chr(addr);
 
-        let mapped = cart.write_chr(addr, v);
-        if mapped {
-            return;
-        }
-
         match addr {
             Addr(0x0000..=0x1FFF) => {
-                let (table_num, cell) = Self::normalize_addr_pattern(addr);
-                self.tbl_pattern[table_num.as_usize()][cell.as_usize()] = v;
+                let mapped = cart.write_chr(addr, v);
+                if mapped {
+                    return;
+                } else {
+                    let (table_num, cell) = Self::normalize_addr_pattern(addr);
+                    self.tbl_pattern[table_num.as_usize()][cell.as_usize()] = v;
+                }
             }
             Addr(0x2000..=0x3EFF) => {
                 let addr = Self::normalize_addr_name(addr);
@@ -825,7 +826,7 @@ impl Ppu {
             if self.cycle == 338 || self.cycle == 340 {
                 self.bg_next_tile_id = self.read_chr(
                     cart,
-                    Addr(0x2000) | (Addr::from(self.vram_addr) & Addr(0x0FFF)).into(),
+                    Addr(0x2000) | (Addr::from(self.vram_addr) & Addr(0x0FFF)),
                 );
             }
 
@@ -851,8 +852,8 @@ impl Ppu {
                 for i in self.sprite_scan_line.iter_mut() {
                     i.y = 0xFF.into();
                     i.id = 0xFF.into();
-                    i.attr = 0x00.into();
-                    i.x = 0x00.into();
+                    i.attr = 0xFF.into();
+                    i.x = 0xFF.into();
                 }
 
                 // The NES supports a maximum number of sprites per scanline. Nominally
@@ -901,8 +902,8 @@ impl Ppu {
                                 self.sprite_zero_hit_possible = true;
                             }
 
-                            self.oam
-                                .write_entry(oam_entry, self.sprite_scan_line[self.sprite_count]);
+                            self.sprite_scan_line[self.sprite_count] =
+                                self.oam.read_entry(oam_entry);
                         }
                         self.sprite_count += 1;
                     }
@@ -1194,10 +1195,6 @@ impl Ppu {
 
         // Now we have a final pixel colour, and a palette for this cycle
         // of the current scanline. Let's at long last, draw that ^&%*er :P
-        if palette != Addr(0) || pixel != Addr(0) {
-            //println!("AAAAAAAAAAAAAAAAAAA")
-        }
-
         let color = self.get_color_from_palette(cart, palette, pixel);
         let pixel_to_screen = Pixel::new(color, (self.cycle - 1) as usize, self.scanline as usize);
         self.screen.set_pixel(

@@ -81,7 +81,7 @@ impl Joypad {
 
     pub fn write(&mut self, v: Byte) {
         if v & Byte(0x01) != Byte(0x00) {
-            self.reg = self.state
+            self.reg = self.state;
         }
     }
 }

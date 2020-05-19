@@ -50,6 +50,7 @@ impl Oam {
     }
 
     pub fn write(&mut self, addr: Addr, v: Byte) {
+        //let addr = addr.as_usize() % SIZE;
         self.mem[addr.as_usize()] = v;
     }
 
@@ -64,7 +65,7 @@ impl Oam {
     }
 
     pub fn write_entry(&mut self, entry_ind: Addr, entry: OamEntry) {
-        let start = entry_ind.as_usize();
+        let start = entry_ind.as_usize() * 4;
         let v = entry.into_bytes();
 
         self.mem[start + 0] = v.0;
