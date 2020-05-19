@@ -133,16 +133,16 @@ impl Cpu {
             let (additional_cycle, inst_need_add) =
                 instruction::exec_instruction(&opcode, &mut self.regs, &mut bus, operand);
 
-            println!("inst: {:?} | operand: {:?}", opcode.inst, operand);
-            println!(
-                "x: {} | y: {} | a: {} | sp: {} | pc: {} | status: {}",
-                self.regs.x,
-                self.regs.y,
-                self.regs.a,
-                self.regs.sp,
-                self.regs.pc,
-                self.regs.status.0
-            );
+            // println!("inst: {:?} | operand: {:?}", opcode.inst, operand);
+            // println!(
+            //     "x: {} | y: {} | a: {} | sp: {} | pc: {} | status: {}",
+            //     self.regs.x,
+            //     self.regs.y,
+            //     self.regs.a,
+            //     self.regs.sp,
+            //     self.regs.pc,
+            //     self.regs.status.0
+            // );
 
             self.cycles += additional_cycle;
 

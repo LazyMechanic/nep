@@ -189,10 +189,10 @@ impl Ppu {
     pub fn read(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
         let addr = Self::normalize_addr(addr);
         match addr {
-            Addr(0x0000) => self.control.into(),
-            Addr(0x0001) => self.mask.into(),
+            Addr(0x0000) => Byte(0),
+            Addr(0x0001) => Byte(0),
             Addr(0x0002) => {
-                let res = self.status.into();
+                let res = (Byte::from(self.status) & Byte(0xE0)) | (self.ppu_data_buf & Byte(0x1F));
 
                 self.status.set_vertical_blank(false);
                 self.addr_latch = 0;
@@ -248,15 +248,15 @@ impl Ppu {
                 if self.addr_latch == 0 {
                     // First write to scroll register contains X offset in pixel space
                     // which we split into coarse and fine x values
-                    self.fine_x = (v & 0x07.into()).as_lo_addr();
+                    self.fine_x = (v & Byte(0x07)).as_lo_addr();
                     self.tram_addr.set_coarse_x((v >> 3).as_lo_addr());
                     self.addr_latch = 1;
                 } else {
                     // First write to scroll register contains Y offset in pixel space
                     // which we split into coarse and fine Y values
-                    self.tram_addr.set_fine_y((v & 0x07.into()).as_lo_addr());
+                    self.tram_addr.set_fine_y((v & Byte(0x07)).as_lo_addr());
                     self.tram_addr.set_coarse_x((v >> 3).as_lo_addr());
-                    self.addr_latch = 1;
+                    self.addr_latch = 0;
                 }
             }
             Addr(0x0006) => {
@@ -265,7 +265,7 @@ impl Ppu {
                     // registers. The fisrt write to this register latches the high byte
                     // of the address, the second is the low byte. Note the writes
                     // are stored in the tram register...
-                    self.tram_addr = ((v & 0x3F.into()).as_hi_addr()
+                    self.tram_addr = ((v & Byte(0x3F)).as_hi_addr()
                         | Addr::from(self.tram_addr).lo_addr())
                     .into();
                     self.addr_latch = 1;
@@ -276,7 +276,7 @@ impl Ppu {
                     // rendering the scanline position.
                     self.tram_addr = (Addr::from(self.tram_addr).hi_addr() | v.as_lo_addr()).into();
                     self.vram_addr = self.tram_addr;
-                    self.addr_latch = 1;
+                    self.addr_latch = 0;
                 }
             }
             Addr(0x0007) => {
@@ -298,30 +298,30 @@ impl Ppu {
 
     fn read_chr(&mut self, cart: &mut Cartridge, addr: Addr) -> Byte {
         let addr = Self::normalize_addr_chr(addr);
+        let (v, mapped) = cart.read_chr(addr);
+        if mapped {
+            return v;
+        }
+
         match addr {
             Addr(0x0000..=0x1FFF) => {
-                let (v, mapped) = cart.read_chr(addr);
-                if mapped {
-                    v
-                } else {
-                    // If the cartridge cant map the address, have
-                    // a physical location ready here
-                    let (table_num, cell) = Self::normalize_addr_pattern(addr);
-                    self.tbl_pattern[table_num.as_usize()][cell.as_usize()]
-                }
+                // If the cartridge cant map the address, have
+                // a physical location ready here
+                let (table_num, cell) = Self::normalize_addr_pattern(addr);
+                self.tbl_pattern[table_num.as_usize()][cell.as_usize()]
             }
             Addr(0x2000..=0x3EFF) => {
                 let addr = Self::normalize_addr_name(addr);
                 let tbl_addr = addr & Addr(0x03FF);
                 match cart.mirror() {
-                    Mirror::Horizontal => match addr {
+                    Mirror::Vertical => match addr {
                         Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()],
                         Addr(0x0400..=0x07FF) => self.tbl_name[1][tbl_addr.as_usize()],
                         Addr(0x0800..=0x0BFF) => self.tbl_name[0][tbl_addr.as_usize()],
                         Addr(0x0C00..=0x0FFF) => self.tbl_name[1][tbl_addr.as_usize()],
                         _ => Byte(0),
                     },
-                    Mirror::Vertical => match addr {
+                    Mirror::Horizontal => match addr {
                         Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()],
                         Addr(0x0400..=0x07FF) => self.tbl_name[0][tbl_addr.as_usize()],
                         Addr(0x0800..=0x0BFF) => self.tbl_name[1][tbl_addr.as_usize()],
@@ -370,14 +370,14 @@ impl Ppu {
                 let addr = Self::normalize_addr_name(addr);
                 let tbl_addr = addr & Addr(0x03FF);
                 match cart.mirror() {
-                    Mirror::Horizontal => match addr {
+                    Mirror::Vertical => match addr {
                         Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
                         Addr(0x0400..=0x07FF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
                         Addr(0x0800..=0x0BFF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
                         Addr(0x0C00..=0x0FFF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
                         _ => {}
                     },
-                    Mirror::Vertical => match addr {
+                    Mirror::Horizontal => match addr {
                         Addr(0x0000..=0x03FF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
                         Addr(0x0400..=0x07FF) => self.tbl_name[0][tbl_addr.as_usize()] = v,
                         Addr(0x0800..=0x0BFF) => self.tbl_name[1][tbl_addr.as_usize()] = v,
@@ -417,8 +417,8 @@ impl Ppu {
         // "& 0x3F"       - Stops us reading beyond the bounds of the palScreen array
         //println!("palette: {} | pixel: {}", palette, pixel);
         let addr1 = self.read_chr(cart, Addr(0x3F00) + (palette << 2) + pixel);
-        let addr = addr1.as_lo_addr().as_usize() & 0x3F;
-        COLORS[addr]
+        let addr2 = addr1.as_lo_addr().as_usize() & 0x3F;
+        COLORS[addr2]
 
         // Note: We dont access tblPalette directly here, instead we know that ppuRead()
         // will map the address onto the seperate small RAM attached to the PPU bus.
@@ -548,13 +548,13 @@ impl Ppu {
         // palette is being used for the current 8 pixels and the next 8 pixels, and
         // "inflate" them to 8 bit words.
         self.bg_shifter_attr_lo = (self.bg_shifter_attr_lo & Word(0xFF00))
-            | (if self.bg_next_tile_attr.inspect_bit(0) {
+            | (if self.bg_next_tile_attr & Byte(0b0000_0001) != Byte(0x00) {
                 Word(0x00FF)
             } else {
                 Word(0x0000)
             });
         self.bg_shifter_attr_hi = (self.bg_shifter_attr_hi & Word(0xFF00))
-            | (if self.bg_next_tile_attr.inspect_bit(0) {
+            | (if self.bg_next_tile_attr & Byte(0b0000_0010) != Byte(0x00) {
                 Word(0x00FF)
             } else {
                 Word(0x0000)
@@ -579,8 +579,8 @@ impl Ppu {
 
         if self.mask.render_sprites() && self.cycle >= 1 && self.cycle < 258 {
             for i in 0..self.sprite_count {
-                if self.sprite_scan_line[i].x > 0.into() {
-                    self.sprite_scan_line[i].x -= 1.into();
+                if self.sprite_scan_line[i].x > Byte(0) {
+                    self.sprite_scan_line[i].x.dec();
                 } else {
                     self.sprite_shifter_pattern_lo[i] <<= 1;
                     self.sprite_shifter_pattern_hi[i] <<= 1;
@@ -787,8 +787,7 @@ impl Ppu {
                             cart,
                             (self.control.pattern_background().as_addr() << 12)
                                 + (self.bg_next_tile_id.as_lo_addr() << 4)
-                                + self.vram_addr.fine_y()
-                                + Addr(0),
+                                + (self.vram_addr.fine_y() + Addr(0)),
                         );
                     }
                     6 => {
@@ -798,8 +797,7 @@ impl Ppu {
                             cart,
                             (self.control.pattern_background().as_addr() << 12)
                                 + (self.bg_next_tile_id.as_lo_addr() << 4)
-                                + (self.vram_addr.fine_y())
-                                + Addr(8),
+                                + (self.vram_addr.fine_y() + Addr(8)),
                         );
                     }
                     7 => {
@@ -851,8 +849,8 @@ impl Ppu {
                 // Firstly, clear out the sprite memory. This memory is used to store the
                 // sprites to be rendered. It is not the OAM.
                 for i in self.sprite_scan_line.iter_mut() {
-                    i.y = 0x00.into();
-                    i.id = 0x00.into();
+                    i.y = 0xFF.into();
+                    i.id = 0xFF.into();
                     i.attr = 0x00.into();
                     i.x = 0x00.into();
                 }
@@ -943,7 +941,7 @@ impl Ppu {
                     // offset by 8 from the lo address.
                     if !self.control.sprite_size() {
                         // 8x8 Sprite Mode - The control register determines the pattern table
-                        if (self.sprite_scan_line[i].attr & 0x80.into()) == 0x00.into() {
+                        if (self.sprite_scan_line[i].attr & Byte(0x80)) == Byte(0x00) {
                             // Sprite is NOT flipped vertically, i.e. normal
                             sprite_pattern_addr_lo = (self.control.pattern_sprite().as_addr() << 12)  // Which Pattern Table? 0KB or 4KB offset
                                     | (self.sprite_scan_line[i].id.as_lo_addr() << 4)  // Which Cell? Tile ID * 16 (16 bytes per tile)
@@ -997,7 +995,7 @@ impl Ppu {
                     // sizes and vertical orientations
 
                     // Hi bit plane equivalent is always offset by 8 bytes from lo bit plane
-                    sprite_pattern_addr_hi = sprite_pattern_addr_lo + Addr(8);
+                    sprite_pattern_addr_hi = sprite_pattern_addr_lo.overflowing_add(Addr(8));
 
                     // Now we have the address of the sprite patterns, we can read them
                     sprite_pattern_bits_lo = self.read_chr(cart, sprite_pattern_addr_lo);

@@ -104,7 +104,6 @@ fn fetch_implied(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool)
 }
 
 fn fetch_immediate(registers: &mut Registers, bus: &mut CpuBus) -> (Operand, bool) {
-    registers.inc_pc();
     let b = fetch_byte(registers, bus);
     (Operand::Byte(b), false)
 }
