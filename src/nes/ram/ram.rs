@@ -1,6 +1,6 @@
 use crate::prelude::*;
 
-const SIZE: usize = 8192; // 8 kb
+const SIZE: usize = 2048; // 2 kb
 
 #[derive(Default)]
 pub struct Ram {

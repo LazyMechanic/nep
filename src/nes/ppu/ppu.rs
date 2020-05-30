@@ -600,10 +600,6 @@ impl Ppu {
             self.screen.ready = false;
         }
 
-        // The lambda functions (functions inside functions) contain the various
-        // actions to be performed depending upon the output of the state machine
-        // for a given scanline/cycle combination
-
         // All but 1 of the secanlines is visible to the user. The pre-render scanline
         // at -1, is used to configure the "shifters" for the first visible scanline, 0.
         if self.scanline >= -1 && self.scanline < 240 {
